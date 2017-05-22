@@ -133,7 +133,7 @@ export default class FileSystem {
    * Store specifications and subsuites for a suite
    *
    * @param {String} suite - Suite name
-   * @param {Object} data - Specifications and nested test suites
+   * @param {Object} data - Specifications and nested test suites               // TODO: document/validate data format
    *
    * @return {Promise} Promise resolving with no result
    */
@@ -142,7 +142,7 @@ export default class FileSystem {
       if (typeof suite !== "string" || !suite.length)
         return reject(new TypeError(`Invalid suite name: "${suite}"`))
       if (typeof data !== "object")
-        return reject(TypeError(`Invalid data: "${data}"`))
+        return reject(new TypeError(`Invalid data: "${data}"`))
 
       /* Create directory */
       resolve()
@@ -161,7 +161,7 @@ export default class FileSystem {
             return new Promise((resolveSpec, rejectSpec) => {
               if (typeof data.specs[name] !== "object")
                 return rejectSpec(
-                  TypeError(`Invalid data: "${data.specs[name]}"`))
+                  new TypeError(`Invalid data: "${data.specs[name]}"`))
 
               /* Serialize data and write to file */
               const file = path.join(directory, `${name}.json`)
