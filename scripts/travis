@@ -45,4 +45,4 @@ rm -rf dist
     "$(yarn bin)"/babel-node tests/index.js
 
 # Upload coverage reports
-"$(yarn bin)"/codecov
+# "$(yarn bin)"/codecov

@@ -40,7 +40,11 @@ jasmine.loadConfigFile(
 
 /* Configure spec reporter *//
 jasmine.clearReporters()
-jasmine.addReporter(new SpecReporter())
+jasmine.addReporter(new SpecReporter({
+  spec: {
+    displayStacktrace: true
+  }
+}))
 
 /* Start test runner */
 jasmine.execute()

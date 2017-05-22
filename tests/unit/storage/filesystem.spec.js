@@ -22,7 +22,6 @@
 
 import fs from "fs"
 import fsMock from "mock-fs"
-import path from "path"
 import requireMock from "mock-require"
 
 import FileSystem from "~/src/storage/FileSystem"
@@ -45,14 +44,8 @@ describe("Storage", () => {
     /* #constructor */
     describe("#constructor", () => {
 
-      /* Register spies and mocks */
+      /* Register mocks */
       beforeEach(() => {
-        spyOn(fs, "existsSync")
-          .and.callThrough()
-        spyOn(fs, "statSync")
-          .and.callThrough()
-
-        /* Mock filesystem */
         fsMock({
           "constructor": {
             "suite": {
@@ -81,16 +74,8 @@ describe("Storage", () => {
     /* #valid */
     describe("#valid", () => {
 
-      /* Register spies and mocks */
+      /* Register mocks */
       beforeEach(() => {
-        spyOn(path, "join")
-          .and.callThrough()
-        spyOn(fs, "existsSync")
-          .and.callThrough()
-        spyOn(fs, "statSync")
-          .and.callThrough()
-
-        /* Mock filesystem */
         fsMock({
           "valid": {
             "test": "",
@@ -115,21 +100,23 @@ describe("Storage", () => {
       it("should fail on file",
         validShouldFailOnFile
       )
+
+      /* Test: should throw on empty suite name */
+      it("should throw on empty suite name",
+        validShouldThrowOnEmptySuiteName
+      )
+
+      /* Test: should throw on invalid suite name */
+      it("should throw on invalid suite name",
+        validShouldThrowOnInvalidSuiteName
+      )
     })
 
     /* #fetch */
     describe("#fetch", () => {
 
-      /* Register spies and mocks */
+      /* Register mocks */
       beforeEach(() => {
-        spyOn(path, "join")
-          .and.callThrough()
-        spyOn(fs, "readdirSync")
-          .and.callThrough()
-        spyOn(fs, "statSync")
-          .and.callThrough()
-
-        /* Mock filesystem */
         fsMock({
           "fetch": {
             "first": {
@@ -140,25 +127,69 @@ describe("Storage", () => {
             }
           }
         })
-
-        /* Mock require */
         requireMock("fetch/first/test.json", { data: true })
         requireMock("fetch/first/second/test.json", { data: true })
       })
 
-      /* Test: should fetch data */
-      it("should fetch data",
-        fetchShouldFetchData
+      /* Test: should return data */
+      it("should return data",
+        fetchShouldReturnData
       )
 
-      /* Test: should fetch nested data */
-      it("should fetch nested data",
-        fetchShouldFetchNestedData
+      /* Test: should return nested data */
+      it("should return nested data",
+        fetchShouldReturnNestedData
+      )
+
+      /* Test: should throw on empty suite name */
+      it("should throw on empty suite name",
+        fetchShouldThrowOnEmptySuiteName
+      )
+
+      /* Test: should throw on invalid suite name */
+      it("should throw on invalid suite name",
+        fetchShouldThrowOnInvalidSuiteName
       )
 
       /* Test: should throw on invalid data */
       it("should throw on invalid data",
         fetchShouldThrowOnInvalidData
+      )
+    })
+
+    /* #store */
+    describe("#store", () => {
+
+      /* Register spies and mocks */
+      beforeEach(() => {
+        fsMock({
+          "store": {}
+        })
+      })
+
+      /* Test: should persist data */
+      it("should persist data",
+        storeShouldPersistData
+      )
+
+      /* Test: should persist nested data */
+      it("should persist nested data",
+        storeShouldPersistNestedData
+      )
+
+      /* Test: should throw on empty suite name */
+      it("should throw on empty suite name",
+        storeShouldThrowOnEmptySuiteName
+      )
+
+      /* Test: should throw on invalid suite name */
+      it("should throw on invalid suite name",
+        storeShouldThrowOnInvalidSuiteName
+      )
+
+      /* Test: should throw on invalid data */
+      it("should throw on invalid data",
+        storeShouldThrowOnInvalidData
       )
     })
   })
@@ -174,8 +205,6 @@ function constructorShouldSetBaseDirectory() {
   const storage = new FileSystem(directory)
   expect(storage.base)
     .toEqual(directory)
-  expect(fs.existsSync)
-    .toHaveBeenCalledWith(directory)
 }
 
 /* Test: #constructor should throw on non-existing directory */
@@ -185,8 +214,6 @@ function constructorShouldThrowOnNonExistingDirectory() {
     new FileSystem(directory)
   }).toThrow(
     new TypeError(`Invalid base: "${directory}"`))
-  expect(fs.existsSync)
-    .toHaveBeenCalledWith(directory)
 }
 
 /* Test: #constructor should throw on file */
@@ -196,8 +223,6 @@ function constructorShouldThrowOnFile() {
     new FileSystem(directory)
   }).toThrow(
     new TypeError(`Invalid base: "${directory}"`))
-  expect(fs.existsSync)
-    .toHaveBeenCalledWith(directory)
 }
 
 /* ----------------------------------------------------------------------------
@@ -206,91 +231,101 @@ function constructorShouldThrowOnFile() {
 
 /* Test: #valid should succeed on existing directory */
 function validShouldSucceedOnExistingDirectory() {
-  const directory = "valid"
-  const storage = new FileSystem(directory)
-  expect(storage.valid("suite"))
+  expect(new FileSystem("valid").valid("suite"))
     .toBe(true)
-  expect(path.join)
-    .toHaveBeenCalledWith(directory, "suite")
-  expect(fs.existsSync.calls.count())
-    .toEqual(2)
-  expect(fs.statSync.calls.count())
-    .toEqual(2)
 }
 
 /* Test: #valid should succeed on existing directory */
 function validShouldFailOnNonExistingDirectory() {
-  const directory = "valid"
-  const storage = new FileSystem(directory)
-  expect(storage.valid("invalid"))
+  expect(new FileSystem("valid").valid("invalid"))
     .toBe(false)
-  expect(path.join)
-    .toHaveBeenCalledWith(directory, "invalid")
-  expect(fs.existsSync.calls.count())
-    .toEqual(2)
-  expect(fs.statSync.calls.count())
-    .toEqual(1)
 }
 
 /* Test: #valid should fail on file */
 function validShouldFailOnFile() {
-  const directory = "valid"
-  const storage = new FileSystem(directory)
-  expect(storage.valid("test"))
+  expect(new FileSystem("valid").valid("test"))
     .toBe(false)
-  expect(fs.existsSync.calls.count())
-    .toEqual(2)
-  expect(fs.statSync.calls.count())
-    .toEqual(2)
+}
+
+/* Test: #valid should throw on empty suite name */
+function validShouldThrowOnEmptySuiteName() {
+  expect(() => {
+    new FileSystem("valid").valid("")
+  }).toThrow(
+    new TypeError("Invalid suite name: \"\""))
+}
+
+/* Test: #valid should throw on invalid suite name */
+function validShouldThrowOnInvalidSuiteName() {
+  expect(() => {
+    new FileSystem("valid").valid(null)
+  }).toThrow(
+    new TypeError("Invalid suite name: \"null\""))
 }
 
 /* ----------------------------------------------------------------------------
  * Definitions: #fetch
  * ------------------------------------------------------------------------- */
 
-/* Test: #fetch should fetch data */
-function fetchShouldFetchData() {
-  const storage = new FileSystem("fetch")
-  expect(storage.fetch("first"))
-    .toEqual({
-      specs: {
-        test: { data: true }
-      },
-      suites: {
-        second: {
+/* Test: #fetch should return data */
+function fetchShouldReturnData(done) {
+  new FileSystem("fetch").fetch("first")
+    .then(suite => {
+      expect(suite)
+        .toEqual({
+          specs: {
+            test: { data: true }
+          },
+          suites: {
+            second: {
+              specs: {
+                test: { data: true }
+              }
+            }
+          }
+        })
+      done()
+    }, done.fail)
+}
+
+/* Test: #fetch should return nested data */
+function fetchShouldReturnNestedData(done) {
+  new FileSystem("fetch").fetch("first/second")
+    .then(suite => {
+      expect(suite)
+        .toEqual({
           specs: {
             test: { data: true }
           }
-        }
-      }
-    })
-  expect(path.join.calls.count())
-    .toEqual(6)
-  expect(fs.readdirSync.calls.count())
-    .toEqual(2)
-  expect(fs.statSync.calls.count())
-    .toEqual(4)
+        })
+      done()
+    }, done.fail)
 }
 
-/* Test: #fetch should fetch nested data */
-function fetchShouldFetchNestedData() {
-  const storage = new FileSystem("fetch")
-  expect(storage.fetch("first/second"))
-    .toEqual({
-      specs: {
-        test: { data: true }
-      }
+/* Test: #fetch should throw on empty suite name */
+function fetchShouldThrowOnEmptySuiteName(done) {
+  new FileSystem("fetch").fetch("")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite name: \"\""))
+      done()
     })
-  expect(path.join.calls.count())
-    .toEqual(2)
-  expect(fs.readdirSync.calls.count())
-    .toEqual(1)
-  expect(fs.statSync.calls.count())
-    .toEqual(2)
+}
+
+/* Test: #fetch should throw on invalid suite name */
+function fetchShouldThrowOnInvalidSuiteName(done) {
+  new FileSystem("fetch").fetch(null)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite name: \"null\""))
+      done()
+    })
 }
 
 /* Test: #fetch should throw on invalid data */
-function fetchShouldThrowOnInvalidData() {
+function fetchShouldThrowOnInvalidData(done) {
   fsMock.restore()
   fsMock({
     "fetch": {
@@ -299,13 +334,104 @@ function fetchShouldThrowOnInvalidData() {
       }
     }
   })
-  requireMock("fetch/suite/test.json", "invalid")
+  requireMock("fetch/suite/test.json", "")
 
   /* We need to override the filesystem mock specifically for this test, so we
      can test how it behaves when loading invalid data */
-  const storage = new FileSystem("fetch")
-  expect(() => {
-    storage.fetch("suite")
-  }).toThrow(
-    new ReferenceError("Invalid contents: \"fetch/suite/test.json\""))
+  new FileSystem("fetch").fetch("suite")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(
+          new TypeError("Invalid contents: \"fetch/suite/test.json\""))
+      done()
+    })
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: #store
+ * ------------------------------------------------------------------------- */
+
+/* Test: #store should persist data */
+function storeShouldPersistData(done) {
+  new FileSystem("store").store("first", {
+    specs: {
+      test: { data: true }
+    },
+    suites: {
+      second: {
+        specs: {
+          test: { data: true }
+        }
+      }
+    }
+  })
+    .then(() => {
+      expect(fs.readFileSync("store/first/test.json", "utf8"))
+        .toEqual("{\"data\":true}")
+      expect(fs.readFileSync("store/first/second/test.json", "utf8"))
+        .toEqual("{\"data\":true}")
+      done()
+    }, done.fail)
+}
+
+/* Test: #store should persist data */
+function storeShouldPersistNestedData(done) {
+  new FileSystem("store").store("first/second", {
+    specs: {
+      test: { data: true }
+    }
+  })
+    .then(() => {
+      expect(fs.existsSync("store/first/test.json"))
+        .toBe(false)
+      expect(fs.readFileSync("store/first/second/test.json", "utf8"))
+        .toEqual("{\"data\":true}")
+      done()
+    }, done.fail)
+}
+
+/* Test: #store should throw on empty suite name */
+function storeShouldThrowOnEmptySuiteName(done) {
+  new FileSystem("store").store("", {})
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite name: \"\""))
+      done()
+    })
+}
+
+/* Test: #store should throw on invalid suite name */
+function storeShouldThrowOnInvalidSuiteName(done) {
+  new FileSystem("store").store(null, {})
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite name: \"null\""))
+      done()
+    })
+}
+
+/* Test: #store should throw on invalid data */
+function storeShouldThrowOnInvalidData(done) {
+  new FileSystem("store").store("first", {
+    specs: {
+      test: { data: true }
+    },
+    suites: {
+      second: {
+        specs: {
+          test: "invalid"
+        }
+      }
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(
+        new TypeError("Invalid data: \"invalid\""))
+      done()
+    })
 }

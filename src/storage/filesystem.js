@@ -21,10 +21,12 @@
  */
 
 import fs from "fs"
+import merge from "deepmerge"
+import mkdirp from "mkdirp-promise"
 import path from "path"
 
 /* ----------------------------------------------------------------------------
- * Functions
+ * Class
  * ------------------------------------------------------------------------- */
 
 export default class FileSystem {
@@ -53,6 +55,10 @@ export default class FileSystem {
    * @return {Boolean} Test result
    */
   valid(suite) {
+    if (typeof suite !== "string" || !suite.length)
+      throw new TypeError(`Invalid suite name: "${suite}"`)
+
+    /* Check for existing directory */
     const directory = path.join(this.base_, suite)
     return fs.existsSync(directory) && fs.statSync(directory).isDirectory()
   }
@@ -60,35 +66,119 @@ export default class FileSystem {
   /**
    * Fetch suites and specifications from a directory and all subdirectories
    *
-   * This method assumes that only data encoded in JSON is loaded. If the
-   * file cannot be loaded with require, an error is thrown.
+   * This method assumes that all data that is loaded is encoded in JSON. If
+   * the file cannot be loaded with require, an error is thrown.
    *
    * @param {String} suite - Suite name
    *
-   * @return {Object} Suites
+   * @return {Promise<Object>} Specifications and nested test suites
    */
   fetch(suite) {
-    const directory = path.join(this.base_, suite)
-    return fs.readdirSync(directory).reduce((result, name) => {
-      const file = path.join(directory, name)
+    return new Promise((resolve, reject) => {
+      if (typeof suite !== "string" || !suite.length)
+        return reject(new TypeError(`Invalid suite name: "${suite}"`))
 
-      /* Load specifications from file */
-      if (fs.statSync(file).isFile()) {
-        const spec = path.basename(name, path.extname(name))
-        try {
-          result.specs = result.specs || {}
-          result.specs[spec] = require(file)
-        } catch (err) {
-          throw new ReferenceError(`Invalid contents: "${file}"`)
-        }
+      /* Traverse directory */
+      const directory = path.join(this.base_, suite)
+      fs.readdir(directory, (readErr, files) => {
+        if (readErr)
+          return reject(readErr)
 
-      /* Recurse on nested test suite */
-      } else {
-        result.suites = result.suites || {}
-        result.suites[name] = this.fetch(path.join(suite, name))
-      }
-      return result
-    }, {})
+        /* Load files asynchronously and recurse */
+        return Promise.all(files.map(name => {
+          return new Promise((resolveFile, rejectFile) => {
+            const file = path.join(directory, name)
+            fs.stat(file, (statErr, stats) => {
+              if (statErr)
+                return rejectFile(statErr)
+
+              /* Load specifications from file */
+              if (stats.isFile()) {
+                const spec = path.basename(name, path.extname(name))
+                try {
+                  return resolveFile({ specs: { [spec]: require(file) } })
+                } catch (_) {
+                  return rejectFile(
+                    new TypeError(`Invalid contents: "${file}"`))
+                }
+
+              /* Recurse on nested test suite */
+              } else {
+                this.fetch(path.join(suite, name))
+
+                  /* Return nested test suites */
+                  .then(suites =>
+                    resolveFile({ suites: { [name]: suites } }))
+
+                  /* Propagate error */
+                  .catch(fetchErr =>
+                    rejectFile(fetchErr))
+              }
+            })
+          })
+        }))
+
+          /* Merge nested test suites and specifications */
+          .then(data =>
+            resolve(data.length > 1
+              ? merge.all(data)
+              : data.pop()))
+
+          /* Propagate error */
+          .catch(allErr =>
+            reject(allErr))
+      })
+    })
+  }
+
+  /**
+   * Store specs and subsuites for a suite
+   *
+   * @param {String} suite - Suite name
+   * @param {Object} data - Specifications and nested test suites
+   *
+   * @return {Promise} Storage
+   */
+  store(suite, data) {
+    return new Promise((resolve, reject) => {
+      if (typeof suite !== "string" || !suite.length)
+        return reject(new TypeError(`Invalid suite name: "${suite}"`))
+      if (typeof data !== "object")
+        return reject(TypeError(`Invalid data: "${data}"`))
+
+      /* Create directory */
+      resolve()
+    })
+
+      /* Ensure directory is present */
+      .then(() => mkdirp(path.join(this.base_, suite)))
+
+      /* Write specifications asynchronously */
+      .then(() => {
+        const directory = path.join(this.base_, suite)
+        return Promise.all(Object.keys(data.specs || {}).map(name => {
+          return new Promise((resolveSpec, rejectSpec) => {
+            if (typeof data.specs[name] !== "object")
+              return rejectSpec(
+                TypeError(`Invalid data: "${data.specs[name]}"`))
+
+            /* Serialize data and write to file */
+            const file = path.join(directory, `${name}.json`)
+            fs.writeFile(file, JSON.stringify(data.specs[name]), writeErr => {
+              if (writeErr)
+                return rejectSpec(writeErr)
+              resolveSpec()
+            })
+          })
+        }))
+      })
+
+      /* Create further suites recursively */
+      .then(() => {
+        return Promise.all(Object.keys(data.suites || {}).map(name => {
+          return this.store(path.join(suite, name), data.suites[name])
+        }))
+      })
   }
 
   /**
