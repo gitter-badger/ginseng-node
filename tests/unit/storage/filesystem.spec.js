@@ -24,7 +24,7 @@ import fs from "fs"
 import fsMock from "mock-fs"
 import requireMock from "mock-require"
 
-import FileSystem from "~/src/storage/FileSystem"
+import FileSystem from "~/src/storage/filesystem"
 
 /* ----------------------------------------------------------------------------
  * Declarations
