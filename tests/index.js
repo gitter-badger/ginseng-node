@@ -35,8 +35,8 @@ if (process.env.NODE_ENV === "development")
 
 /* Create new test suite from config file */
 const jasmine = new Jasmine()
-jasmine.loadConfigFile(
-  path.resolve(__dirname, "jasmine.json"))
+// eslint-disable-next-line no-unused-expression
+jasmine.loadConfigFile(path.resolve(__dirname, "jasmine.json"))
 
 /* Configure spec reporter *//
 jasmine.clearReporters()
