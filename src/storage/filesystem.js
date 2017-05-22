@@ -120,9 +120,7 @@ export default class FileSystem {
 
           /* Merge nested test suites and specifications */
           .then(data =>
-            resolve(data.length > 1
-              ? merge.all(data)
-              : data.pop()))
+            resolve(merge.all([...data, {}])))
 
           /* Propagate error */
           .catch(allErr =>
@@ -132,12 +130,12 @@ export default class FileSystem {
   }
 
   /**
-   * Store specs and subsuites for a suite
+   * Store specifications and subsuites for a suite
    *
    * @param {String} suite - Suite name
    * @param {Object} data - Specifications and nested test suites
    *
-   * @return {Promise} Storage
+   * @return {Promise} Promise resolving with no result
    */
   store(suite, data) {
     return new Promise((resolve, reject) => {
@@ -153,31 +151,33 @@ export default class FileSystem {
       /* Ensure directory is present */
       .then(() => mkdirp(path.join(this.base_, suite)))
 
-      /* Write specifications asynchronously */
+      /* Write files asynchronously */
       .then(() => {
         const directory = path.join(this.base_, suite)
-        return Promise.all(Object.keys(data.specs || {}).map(name => {
-          return new Promise((resolveSpec, rejectSpec) => {
-            if (typeof data.specs[name] !== "object")
-              return rejectSpec(
-                TypeError(`Invalid data: "${data.specs[name]}"`))
+        return Promise.all([
 
-            /* Serialize data and write to file */
-            const file = path.join(directory, `${name}.json`)
-            fs.writeFile(file, JSON.stringify(data.specs[name]), writeErr => {
-              if (writeErr)
-                return rejectSpec(writeErr)
-              resolveSpec()
+          /* Write specifications */
+          ...Object.keys(data.specs || {}).map(name => {
+            return new Promise((resolveSpec, rejectSpec) => {
+              if (typeof data.specs[name] !== "object")
+                return rejectSpec(
+                  TypeError(`Invalid data: "${data.specs[name]}"`))
+
+              /* Serialize data and write to file */
+              const file = path.join(directory, `${name}.json`)
+              fs.writeFile(file, JSON.stringify(data.specs[name]), writeErr => {
+                if (writeErr)
+                  return rejectSpec(writeErr)
+                resolveSpec()
+              })
             })
-          })
-        }))
-      })
+          }),
 
-      /* Create further suites recursively */
-      .then(() => {
-        return Promise.all(Object.keys(data.suites || {}).map(name => {
-          return this.store(path.join(suite, name), data.suites[name])
-        }))
+          /* Write nested test suites */
+          ...Object.keys(data.suites || {}).map(name => {
+            return this.store(path.join(suite, name), data.suites[name])
+          })
+        ])
       })
   }
 
