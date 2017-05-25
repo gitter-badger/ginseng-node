@@ -194,6 +194,11 @@ describe("Storage", () => {
         fetchShouldThrowOnInvalidContents
       )
 
+      /* Test: should throw on nested invalid contents */
+      it("should throw on nested invalid contents",
+        fetchShouldThrowOnNestedInvalidContents
+      )
+
       /* Test: should throw on non-existing suite */
       it("should throw on non-existing suite",
         fetchShouldThrowOnNonExistingSuite
@@ -461,6 +466,34 @@ function fetchShouldThrowOnInvalidContents(done) {
       expect(err)
         .toEqual(
           new TypeError("Invalid contents: \"fetch/suite/test.json\""))
+      done()
+    })
+}
+
+/* Test: #fetch should throw on nested invalid contents */
+function fetchShouldThrowOnNestedInvalidContents(done) {
+  fsMock.restore()
+  fsMock({
+    "fetch": {
+      "first": {
+        "second": {
+          "test.json": ""
+        }
+      }
+    }
+  })
+
+  /* Mock required files */
+  requireMock("fetch/first/second/test.json", "")
+
+  /* We need to override the filesystem mock specifically for this test, so we
+     can test how it behaves when loading invalid data */
+  new FileSystem("fetch").fetch("first")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(
+          new TypeError("Invalid contents: \"fetch/first/second/test.json\""))
       done()
     })
 }
