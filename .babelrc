@@ -1,10 +1,11 @@
 {
-  "presets": ["es2015"],
-  "plugins": [
-    "babel-plugin-root-import"
-  ],
+  "presets": ["env"],
+  "plugins": ["root-import"],
   "env": {
     "test": {
+      "presets": [
+        ["env", { "modules": "umd" }]
+      ],
       "plugins": ["istanbul"]
     }
   }

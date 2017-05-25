@@ -52,14 +52,16 @@ export default class FileSystem {
    * Check, whether the given suite exists
    *
    * @param {String} suite - Suite name
+   * @param {Array<String>} [agent=[]] - Agent information
+   *
    * @return {Boolean} Test result
    */
-  valid(suite) {
+  valid(suite, agent = []) {
     if (typeof suite !== "string" || !suite.length)
       throw new TypeError(`Invalid suite name: "${suite}"`)
 
     /* Check for existing directory */
-    const directory = path.join(this.base_, suite)
+    const directory = path.join(this.base_, ...agent, suite)
     return fs.existsSync(directory) && fs.statSync(directory).isDirectory()
   }
 
@@ -70,16 +72,19 @@ export default class FileSystem {
    * the file cannot be loaded with require, an error is thrown.
    *
    * @param {String} suite - Suite name
+   * @param {Array<String>} [agent=[]] - Agent information                      // TODO: test that agents are properly passed
    *
-   * @return {Promise<Object>} Specifications and nested test suites
+   * @return {Promise<Object>} Promise resolving with fetched data
    */
-  fetch(suite) {
+  fetch(suite, agent = []) {
     return new Promise((resolve, reject) => {
       if (typeof suite !== "string" || !suite.length)
         return reject(new TypeError(`Invalid suite name: "${suite}"`))
+      if (!(agent instanceof Array))
+        return reject(new TypeError(`Invalid agent: "${agent}"`))
 
       /* Traverse directory */
-      const directory = path.join(this.base_, suite)
+      const directory = path.join(this.base_, ...agent, suite)
       fs.readdir(directory, (readErr, files) => {
         if (readErr)
           return reject(readErr)
@@ -104,7 +109,7 @@ export default class FileSystem {
 
               /* Recurse on nested test suite */
               } else {
-                this.fetch(path.join(suite, name))
+                this.fetch(path.join(suite, name), agent)
 
                   /* Return nested test suites */
                   .then(suites =>
@@ -134,26 +139,27 @@ export default class FileSystem {
    *
    * @param {String} suite - Suite name
    * @param {Object} data - Specifications and nested test suites               // TODO: document/validate data format
+   * @param {Array<String>} [agent=[]] - Agent information
    *
    * @return {Promise} Promise resolving with no result
    */
-  store(suite, data) {
+  store(suite, data, agent = []) {
     return new Promise((resolve, reject) => {
       if (typeof suite !== "string" || !suite.length)
         return reject(new TypeError(`Invalid suite name: "${suite}"`))
       if (typeof data !== "object")
         return reject(new TypeError(`Invalid data: "${data}"`))
-
-      /* Create directory */
+      if (!(agent instanceof Array))
+        return reject(new TypeError(`Invalid agent: "${agent}"`))
       resolve()
     })
 
       /* Ensure directory is present */
-      .then(() => mkdirp(path.join(this.base_, suite)))
+      .then(() => mkdirp(path.join(this.base_, ...agent, suite)))
 
       /* Write files asynchronously */
       .then(() => {
-        const directory = path.join(this.base_, suite)
+        const directory = path.join(this.base_, ...agent, suite)
         return Promise.all([
 
           /* Write specifications */
@@ -175,7 +181,7 @@ export default class FileSystem {
 
           /* Write nested test suites */
           ...Object.keys(data.suites || {}).map(name => {
-            return this.store(path.join(suite, name), data.suites[name])
+            return this.store(path.join(suite, name), data.suites[name], agent)
           })
         ])
       })

@@ -41,8 +41,8 @@ rm -rf dist
 
 # Start test runner
 "$(yarn bin)"/cross-env NODE_ENV=test \
-  "$(yarn bin)"/nyc --reporter=lcov --reporter=text \
+  "$(yarn bin)"/nyc --reporter=lcov \
     "$(yarn bin)"/babel-node tests/index.js
 
 # Upload coverage reports
-# "$(yarn bin)"/codecov
+"$(yarn bin)"/codecov
