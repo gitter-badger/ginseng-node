@@ -22,6 +22,7 @@
 
 import fs from "fs"
 import fsMock from "mock-fs"
+import path from "path"
 import requireMock from "mock-require"
 
 import FileSystem from "~/src/storage/filesystem"
@@ -44,8 +45,10 @@ describe("Storage", () => {
     /* #constructor */
     describe("#constructor", () => {
 
-      /* Register mocks */
+      /* Register spies and mocks */
       beforeEach(() => {
+
+        /* Mock filesystem */
         fsMock({
           "constructor": {
             "suite": {
@@ -74,8 +77,12 @@ describe("Storage", () => {
     /* #valid */
     describe("#valid", () => {
 
-      /* Register mocks */
+      /* Register spies and mocks */
       beforeEach(() => {
+        spyOn(path, "join")
+          .and.callThrough()
+
+        /* Mock filesystem */
         fsMock({
           "valid": {
             "test": "",
@@ -86,19 +93,24 @@ describe("Storage", () => {
         })
       })
 
-      /* Test: should succeed on existing directory */
-      it("should succeed on existing directory",
-        validShouldSucceedOnExistingDirectory
+      /* Test: should succeed on existing suite */
+      it("should succeed on existing suite",
+        validShouldSucceedOnExistingSuite
       )
 
-      /* Test: should fail on non-existing directory */
-      it("should fail on non-existing directory",
-        validShouldFailOnNonExistingDirectory
+      /* Test: should fail on non-existing suite */
+      it("should fail on non-existing suite",
+        validShouldFailOnNonExistingSuite
       )
 
       /* Test: should fail on file */
       it("should fail on file",
         validShouldFailOnFile
+      )
+
+      /* Test: should respect scope */
+      it("should respect scope",
+        validShouldRespectScope
       )
 
       /* Test: should throw on empty suite name */
@@ -110,13 +122,22 @@ describe("Storage", () => {
       it("should throw on invalid suite name",
         validShouldThrowOnInvalidSuiteName
       )
+
+      /* Test: should throw on invalid scope */
+      it("should throw on invalid scope",
+        validShouldThrowOnInvalidScope
+      )
     })
 
     /* #fetch */
     describe("#fetch", () => {
 
-      /* Register mocks */
+      /* Register spies and mocks */
       beforeEach(() => {
+        spyOn(path, "join")
+          .and.callThrough()
+
+        /* Mock filesystem */
         fsMock({
           "fetch": {
             "first": {
@@ -124,9 +145,16 @@ describe("Storage", () => {
               "second": {
                 "test.json": "{ data: true }"
               }
+            },
+            "meta": {
+              "test": {
+                "test.json": "{ data: true }"
+              }
             }
           }
         })
+
+        /* Mock required files */
         requireMock("fetch/first/test.json", { data: true })
         requireMock("fetch/first/second/test.json", { data: true })
       })
@@ -136,9 +164,14 @@ describe("Storage", () => {
         fetchShouldReturnData
       )
 
-      /* Test: should return nested data */
+      /* Test: should return nested data */                                     // TODO: should send agents correctly (path.join!)
       it("should return nested data",
         fetchShouldReturnNestedData
+      )
+
+      /* Test: should respect scope */
+      it("should respect scope",
+        fetchShouldRespectScope
       )
 
       /* Test: should throw on empty suite name */
@@ -151,9 +184,24 @@ describe("Storage", () => {
         fetchShouldThrowOnInvalidSuiteName
       )
 
-      /* Test: should throw on invalid data */
-      it("should throw on invalid data",
-        fetchShouldThrowOnInvalidData
+      /* Test: should throw on invalid scope */
+      it("should throw on invalid scope",
+        fetchShouldThrowOnInvalidScope
+      )
+
+      /* Test: should throw on invalid contents */
+      it("should throw on invalid contents",
+        fetchShouldThrowOnInvalidContents
+      )
+
+      /* Test: should throw on non-existing suite */
+      it("should throw on non-existing suite",
+        fetchShouldThrowOnNonExistingSuite
+      )
+
+      /* Test: should throw on failed stat */
+      it("should throw on failed stat",
+        fetchShouldThrowOnFailedStat
       )
     })
 
@@ -162,6 +210,10 @@ describe("Storage", () => {
 
       /* Register spies and mocks */
       beforeEach(() => {
+        spyOn(path, "join")
+          .and.callThrough()
+
+        /* Mock filesystem */
         fsMock({
           "store": {}
         })
@@ -177,6 +229,11 @@ describe("Storage", () => {
         storeShouldPersistNestedData
       )
 
+      /* Test: should respect scope */
+      it("should respect scope",
+        storeShouldRespectScope
+      )
+
       /* Test: should throw on empty suite name */
       it("should throw on empty suite name",
         storeShouldThrowOnEmptySuiteName
@@ -187,9 +244,24 @@ describe("Storage", () => {
         storeShouldThrowOnInvalidSuiteName
       )
 
+      /* Test: should throw on invalid scope */
+      it("should throw on invalid scope",
+        storeShouldThrowOnInvalidScope
+      )
+
       /* Test: should throw on invalid data */
       it("should throw on invalid data",
         storeShouldThrowOnInvalidData
+      )
+
+      /* Test: should throw on invalid contents */
+      it("should throw on invalid contents",
+        storeShouldThrowOnInvalidContents
+      )
+
+      /* Test: should throw on failed write */
+      it("should throw on failed write",
+        storeShouldThrowOnFailedWrite
       )
     })
   })
@@ -229,14 +301,14 @@ function constructorShouldThrowOnFile() {
  * Definitions: #valid
  * ------------------------------------------------------------------------- */
 
-/* Test: #valid should succeed on existing directory */
-function validShouldSucceedOnExistingDirectory() {
+/* Test: #valid should succeed on existing suite */
+function validShouldSucceedOnExistingSuite() {
   expect(new FileSystem("valid").valid("suite"))
     .toBe(true)
 }
 
-/* Test: #valid should succeed on existing directory */
-function validShouldFailOnNonExistingDirectory() {
+/* Test: #valid should succeed on existing suite */
+function validShouldFailOnNonExistingSuite() {
   expect(new FileSystem("valid").valid("invalid"))
     .toBe(false)
 }
@@ -245,6 +317,14 @@ function validShouldFailOnNonExistingDirectory() {
 function validShouldFailOnFile() {
   expect(new FileSystem("valid").valid("test"))
     .toBe(false)
+}
+
+/* Test: #valid should respect scope */
+function validShouldRespectScope() {
+  const scope = ["agent", "os"]
+  new FileSystem("valid").valid("suite", scope)
+  expect(path.join)
+    .toHaveBeenCalledWith("valid", ...scope, "suite")
 }
 
 /* Test: #valid should throw on empty suite name */
@@ -261,6 +341,14 @@ function validShouldThrowOnInvalidSuiteName() {
     new FileSystem("valid").valid(null)
   }).toThrow(
     new TypeError("Invalid suite name: \"null\""))
+}
+
+/* Test: #valid should throw on invalid scope */
+function validShouldThrowOnInvalidScope() {
+  expect(() => {
+    new FileSystem("valid").valid("test", null)
+  }).toThrow(
+    new TypeError("Invalid scope: \"null\""))
 }
 
 /* ----------------------------------------------------------------------------
@@ -285,7 +373,8 @@ function fetchShouldReturnData(done) {
           }
         })
       done()
-    }, done.fail)
+    })
+    .catch(done.fail)
 }
 
 /* Test: #fetch should return nested data */
@@ -299,7 +388,22 @@ function fetchShouldReturnNestedData(done) {
           }
         })
       done()
-    }, done.fail)
+    })
+    .catch(done.fail)
+}
+
+/* Test: #fetch should respect scope */
+function fetchShouldRespectScope(done) {
+  const scope = ["agent", "os"]
+  new FileSystem("fetch").fetch("suite", scope)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(jasmine.any(Error))
+      expect(path.join)
+        .toHaveBeenCalledWith("fetch", ...scope, "suite")
+      done()
+    })
 }
 
 /* Test: #fetch should throw on empty suite name */
@@ -324,16 +428,29 @@ function fetchShouldThrowOnInvalidSuiteName(done) {
     })
 }
 
-/* Test: #fetch should throw on invalid data */
-function fetchShouldThrowOnInvalidData(done) {
+/* Test: #fetch should throw on invalid scope */
+function fetchShouldThrowOnInvalidScope(done) {
+  new FileSystem("fetch").fetch("test", null)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid scope: \"null\""))
+      done()
+    })
+}
+
+/* Test: #fetch should throw on invalid contents */
+function fetchShouldThrowOnInvalidContents(done) {
   fsMock.restore()
   fsMock({
     "fetch": {
       "suite": {
-        "test.json": "invalid"
+        "test.json": ""
       }
     }
   })
+
+  /* Mock required files */
   requireMock("fetch/suite/test.json", "")
 
   /* We need to override the filesystem mock specifically for this test, so we
@@ -344,6 +461,32 @@ function fetchShouldThrowOnInvalidData(done) {
       expect(err)
         .toEqual(
           new TypeError("Invalid contents: \"fetch/suite/test.json\""))
+      done()
+    })
+}
+
+/* Test: #fetch should throw on non-existing suite */
+function fetchShouldThrowOnNonExistingSuite(done) {
+  new FileSystem("fetch").fetch("invalid")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(jasmine.any(Error))
+      done()
+    })
+}
+
+/* Test: #fetch should throw on failed stat */
+function fetchShouldThrowOnFailedStat(done) {
+  spyOn(fs, "stat")
+    .and.callFake((file, cb) => {
+      cb("fail")
+    })
+  new FileSystem("fetch").fetch("first")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual("fail")
       done()
     })
 }
@@ -372,7 +515,8 @@ function storeShouldPersistData(done) {
       expect(fs.readFileSync("store/first/second/test.json", "utf8"))
         .toEqual("{\"data\":true}")
       done()
-    }, done.fail)
+    })
+    .catch(done.fail)
 }
 
 /* Test: #store should persist data */
@@ -388,7 +532,20 @@ function storeShouldPersistNestedData(done) {
       expect(fs.readFileSync("store/first/second/test.json", "utf8"))
         .toEqual("{\"data\":true}")
       done()
-    }, done.fail)
+    })
+    .catch(done.fail)
+}
+
+/* Test: #store should respect scope */
+function storeShouldRespectScope(done) {
+  const scope = ["agent", "os"]
+  new FileSystem("store").store("suite", {}, scope)
+    .then(() => {
+      expect(path.join)
+        .toHaveBeenCalledWith("store", ...scope, "suite")
+      done()
+    })
+    .catch(done.fail)
 }
 
 /* Test: #store should throw on empty suite name */
@@ -413,8 +570,30 @@ function storeShouldThrowOnInvalidSuiteName(done) {
     })
 }
 
+/* Test: #store should throw on invalid scope */
+function storeShouldThrowOnInvalidScope(done) {
+  new FileSystem("store").store("test", {}, null)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid scope: \"null\""))
+      done()
+    })
+}
+
 /* Test: #store should throw on invalid data */
 function storeShouldThrowOnInvalidData(done) {
+  new FileSystem("store").store("test", "invalid")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid data: \"invalid\""))
+      done()
+    })
+}
+
+/* Test: #store should throw on invalid contents */
+function storeShouldThrowOnInvalidContents(done) {
   new FileSystem("store").store("first", {
     specs: {
       test: { data: true }
@@ -431,7 +610,26 @@ function storeShouldThrowOnInvalidData(done) {
     .catch(err => {
       expect(err)
         .toEqual(
-        new TypeError("Invalid data: \"invalid\""))
+        new TypeError("Invalid contents: \"invalid\""))
+      done()
+    })
+}
+
+/* Test: #fetch should throw on failed write */
+function storeShouldThrowOnFailedWrite(done) {
+  spyOn(fs, "writeFile")
+    .and.callFake((file, data, cb) => {
+      cb("fail")
+    })
+  new FileSystem("store").store("first", {
+    specs: {
+      test: { data: true }
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual("fail")
       done()
     })
 }
