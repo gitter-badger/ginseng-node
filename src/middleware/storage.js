@@ -47,7 +47,6 @@ export const get = init => {
 
     /* Wait for storage to be ready */
     return init.then(storage => {
-      res.setHeader("Content-Type", "application/json")
 
       /* Check if the given directory exists */
       if (!storage.valid(req.params.path, scope)) {
@@ -59,6 +58,7 @@ export const get = init => {
       /* Fetch data from storage */
       return storage.fetch(req.params.path, scope).then(data => {
         res.statusCode = 200 // OK
+        res.setHeader("Content-Type", "application/json")
         res.end(JSON.stringify(data))
       })
     })
@@ -129,10 +129,6 @@ export default (init, ref = null) => {
   /* Register methods for router */
   router.get("/:path(\\S*)?", get(init))
   router.post("/:path(\\S*)?", post(init))
-
-  // router.use((err, req, res, next) => {
-  //   console.log(err)
-  // })
 
   /* Return router */
   return router

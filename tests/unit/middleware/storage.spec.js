@@ -34,7 +34,7 @@ import * as middleware from "~/src/middleware/storage"
 /* Middleware */
 describe("Middleware", () => {
 
-  /* Storage */
+  /* storage */
   describe("storage", () => {
 
     /* Test: should return router */
@@ -84,6 +84,16 @@ describe("Middleware", () => {
       /* Test: should return connect-compatible middleware */
       it("should return connect-compatible middleware",
         getShouldReturnConnectCompatibleMiddleware
+      )
+
+      /* Test: should set content type on success */
+      it("should set content type on success",
+        getShouldSetContentTypeOnSuccess
+      )
+
+      /* Test: should not set content type on error */
+      it("should not set content type on error",
+        getShouldNotSetContentTypeOnError
       )
 
       /* Test: should set HTTP status to 200 on success */
@@ -205,6 +215,52 @@ function getShouldReturnConnectCompatibleMiddleware() {
     .toEqual(3)
 }
 
+/* Test: .get should set content type on success */
+function getShouldSetContentTypeOnSuccess(done) {
+  const storage = {
+    valid: jasmine.createSpy("valid").and.returnValue(true),
+    fetch: jasmine.createSpy("fetch").and.returnValue(
+      Promise.resolve({ data: true }))
+  }
+
+  /* Mock middleware parameters */
+  const req  = httpMocks.createRequest(),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Create middleware and resolve request */
+  const handler = middleware.get(Promise.resolve(storage))
+  handler(req, res, next)
+    .then(() => {
+      expect(res._getHeaders())
+        .toEqual({ "Content-Type": "application/json" })
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .get should not set content type on error */
+function getShouldNotSetContentTypeOnError(done) {
+  const storage = {
+    valid: jasmine.createSpy("valid").and.returnValue(false)
+  }
+
+  /* Mock middleware parameters */
+  const req  = httpMocks.createRequest({ params: { path: "invalid" } }),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Create middleware and resolve request */
+  const handler = middleware.get(Promise.resolve(storage))
+  handler(req, res, next)
+    .then(() => {
+      expect(res._getHeaders())
+        .toEqual({})
+      done()
+    })
+    .catch(done.fail)
+}
+
 /* Test: .get should set HTTP status to 200 on success */
 function getShouldSetHttpStatusTo200OnSuccess(done) {
   const storage = {
@@ -232,6 +288,7 @@ function getShouldSetHttpStatusTo200OnSuccess(done) {
         .not.toHaveBeenCalled()
       done()
     })
+    .catch(done.fail)
 }
 
 /* Test: .get should set HTTP status to 404 on non-existing directory */
@@ -287,6 +344,7 @@ function getShouldSetHttpStatusTo500OnInternalError(done) {
           new ReferenceError("Internal error"))
       done()
     })
+    .catch(done.fail)
 }
 
 /* Test: .get should throw on invalid initializer */
@@ -332,6 +390,7 @@ function postShouldSetHttpStatusTo200OnSuccess(done) {
         .not.toHaveBeenCalled()
       done()
     })
+    .catch(done.fail)
 }
 
 /* Test: .post should set HTTP status to 500 on internal error */
@@ -359,6 +418,7 @@ function postShouldSetHttpStatusTo500OnInternalError(done) {
           new ReferenceError("Internal error"))
       done()
     })
+    .catch(done.fail)
 }
 
 /* Test: .post should throw on invalid initializer */
