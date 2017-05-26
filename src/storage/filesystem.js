@@ -32,7 +32,7 @@ import path from "path"
 export default class FileSystem {
 
   /**
-   * Create a FileSystem storage
+   * Create a file system storage
    *
    * @constructor
    *
@@ -197,4 +197,20 @@ export default class FileSystem {
   get base() {
     return this.base_
   }
+}
+
+/* ----------------------------------------------------------------------------
+ * Factory
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Create a file system storage and ensure that the base directory is present
+ *
+ * @param {String} base - Base directory
+ *
+ * @return {Promise<FileSystem>} Promise resolving with file system storage
+ */
+export const factory = base => {
+  return mkdirp(base)
+    .then(() => new FileSystem(base))
 }

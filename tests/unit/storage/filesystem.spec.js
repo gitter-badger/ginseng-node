@@ -25,7 +25,7 @@ import fsMock from "mock-fs"
 import path from "path"
 import requireMock from "mock-require"
 
-import FileSystem from "~/src/storage/filesystem"
+import { factory, default as FileSystem } from "~/src/storage/filesystem"
 
 /* ----------------------------------------------------------------------------
  * Declarations
@@ -63,9 +63,9 @@ describe("Storage", () => {
         constructorShouldSetBaseDirectory
       )
 
-      /* Test: should throw on non-existing directory */
-      it("should throw on non-existing directory",
-        constructorShouldThrowOnNonExistingDirectory
+      /* Test: should throw on non-existing base directory */
+      it("should throw on non-existing base directory",
+        constructorShouldThrowOnNonExistingBaseDirectory
       )
 
       /* Test: should throw on file */
@@ -269,6 +269,32 @@ describe("Storage", () => {
         storeShouldThrowOnFailedWrite
       )
     })
+
+    /* .factory */
+    describe(".factory", () => {
+
+      /* Register mocks */
+      beforeEach(() => {
+        fsMock({
+          "factory": {}
+        })
+      })
+
+      /* Test: should use existing base directory */
+      it("should use existing base directory",
+        factoryShouldUseExistingBaseDirectory
+      )
+
+      /* Test: should create non-existing base directory */
+      it("should create non-existing base directory",
+        factoryShouldCreateNonExistingBaseDirectory
+      )
+
+      /* Test: should throw on constructor error */
+      it("should throw on constructor error",
+        factoryShouldThrowOnConstructorError
+      )
+    })
   })
 })
 
@@ -284,8 +310,8 @@ function constructorShouldSetBaseDirectory() {
     .toEqual(directory)
 }
 
-/* Test: #constructor should throw on non-existing directory */
-function constructorShouldThrowOnNonExistingDirectory() {
+/* Test: #constructor should throw on non-existing base directory */
+function constructorShouldThrowOnNonExistingBaseDirectory() {
   const directory = "constructor/invalid"
   expect(() => {
     new FileSystem(directory)
@@ -663,6 +689,47 @@ function storeShouldThrowOnFailedWrite(done) {
     .catch(err => {
       expect(err)
         .toEqual("fail")
+      done()
+    })
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: .factory
+ * ------------------------------------------------------------------------- */
+
+/* Test: .factory should use existing base directory */
+function factoryShouldUseExistingBaseDirectory(done) {
+  factory("factory")
+    .then(storage => {
+      expect(storage.base)
+        .toEqual("factory")
+      expect(fs.existsSync("factory"))
+        .toBe(true)
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .factory should create non-existing base directory */
+function factoryShouldCreateNonExistingBaseDirectory(done) {
+  factory("new/base/directory")
+    .then(storage => {
+      expect(storage.base)
+        .toEqual("new/base/directory")
+      expect(fs.existsSync("new/base/directory"))
+        .toBe(true)
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .factory should throw on constructor error */
+function factoryShouldThrowOnConstructorError(done) {
+  factory(null)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(jasmine.any(TypeError))
       done()
     })
 }
