@@ -21,8 +21,9 @@
  */
 
 import body from "body-parser"
-import router from "router"
 import useragent from "useragent"
+
+import Router from "router"
 
 /* ----------------------------------------------------------------------------
  * Functions
@@ -31,46 +32,77 @@ import useragent from "useragent"
 /**
  * Initialize a middleware to fetch data from a storage
  *
- * @param {Object} storage - Storage
+ * @param {Promise<Object>} init - Promise resolving with storage
  *
  * @return {Function} Connect-compatible middleware
  */
-export const get = storage => {
+export const get = init => {
+  if (!(init instanceof Promise))
+    throw new TypeError(`Invalid initializer: "${init}"`)
+
+  /* Return connect-compatible middleware */
   return (req, res, next) => {
     const agent = useragent.parse(req.headers["user-agent"])
+    const scope = [agent.toAgent(), agent.os.toString()]
 
-    /* Fetch data from storage and return promise for unit tests */             // TODO: check with Storage#valid, return 404
-    return storage.fetch(req.params.path, [
-      agent.toAgent(), agent.os.toString()
-    ])
-      .then(data => {
-        res.setHeader("Content-Type", "application/json")
+    /* Wait for storage to be ready */
+    return init.then(storage => {
+      res.setHeader("Content-Type", "application/json")
+
+      /* Check if the given directory exists */
+      if (!storage.valid(req.params.path, scope)) {
+        res.statusCode = 404 // Not Found
+        return Promise.reject(new ReferenceError("Invalid path: " +
+          `${req.params.path} not found for ${scope.join(", ")}`))
+      }
+
+      /* Fetch data from storage */
+      return storage.fetch(req.params.path, scope).then(data => {
+        res.statusCode = 200 // OK
         res.end(JSON.stringify(data))
       })
-      .catch(next)
+    })
+
+      /* Forward unhandled errors to error handler */
+      .catch(err => {
+        if (res.statusCode >= 200 && res.statusCode <= 299)
+          res.statusCode = 500
+        next(err)
+      })
   }
 }
 
 /**
  * Initialize a middleware to store data in a storage
  *
- * @param {Object} storage - Storage
+ * @param {Promise<Object>} init - Promise resolving with storage
  *
  * @return {Function} Connect-compatible middleware
  */
-export const post = storage => {
+export const post = init => {
+  if (!(init instanceof Promise))
+    throw new TypeError(`Invalid initializer: "${init}"`)
+
+  /* Return connect-compatible middleware */
   return (req, res, next) => {
     const agent = useragent.parse(req.headers["user-agent"])
+    const scope = [agent.toAgent(), agent.os.toString()]
 
-    /* Fetch data from storage and return promise for unit tests */
-    return storage.store(req.params.path, [
-      agent.toAgent(), agent.os,toString()
-    ], req.body)
-      .then(() => {
-        res.status(200)
+    /* Wait for storage to be ready */
+    return init.then(storage => {
+
+      /* Store data in storage */
+      return storage.store(req.params.path, scope, req.body).then(() => {
+        res.statusCode = 201 // Created
         res.end()
       })
-      .catch(next)
+    })
+
+      /* Forward unhandled errors to error handler */
+      .catch(err => {
+        res.statusCode = 500
+        next(err)
+      })
   }
 }
 
@@ -81,18 +113,27 @@ export const post = storage => {
 /**
  * Create a router
  *
- * @param {Object} storage - Storage
+ * @param {Promise<Object>} init - Promise resolving with storage
+ * @param {Router} [ref] - Router reference, if given
  *
- * @return {Object} Router
+ * @return {Router} Router
  */
-export default storage => {
-  const route = router()
-  route.use(body.json())
+export default (init, ref = null) => {
+  if (ref && !(ref instanceof Router))
+    throw new TypeError(`Invalid router: "${ref}"`)
+
+  /* Create router and add JSON parser middleware */
+  const router = ref || new Router()
+  router.use(body.json())
 
   /* Register methods for router */
-  route.get("/:path(\\S*)?", get(storage))
-  route.post("/:path(\\S*)?", post(storage))
+  router.get("/:path(\\S*)?", get(init))
+  router.post("/:path(\\S*)?", post(init))
+
+  // router.use((err, req, res, next) => {
+  //   console.log(err)
+  // })
 
   /* Return router */
-  return route
+  return router
 }

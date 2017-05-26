@@ -51,8 +51,8 @@ describe("Storage", () => {
         /* Mock filesystem */
         fsMock({
           "constructor": {
-            "suite": {
-              "test.json": "{ data: true }"
+            "genmaicha": {
+              "oolong.json": "{ data: true }"
             }
           }
         })
@@ -85,9 +85,9 @@ describe("Storage", () => {
         /* Mock filesystem */
         fsMock({
           "valid": {
-            "test": "",
-            "suite": {
-              "test.json": "{ data: true }"
+            "sencha": "",
+            "genmaicha": {
+              "oolong.json": ""
             }
           }
         })
@@ -140,23 +140,23 @@ describe("Storage", () => {
         /* Mock filesystem */
         fsMock({
           "fetch": {
-            "first": {
-              "test.json": "{ data: true }",
-              "second": {
-                "test.json": "{ data: true }"
+            "genmaicha": {
+              "oolong.json": "",
+              "sencha": {
+                "bancha.json": ""
               }
             },
-            "meta": {
-              "test": {
-                "test.json": "{ data: true }"
+            "scope": {
+              "genmaicha": {
+                "oolong.json": ""
               }
             }
           }
         })
 
         /* Mock required files */
-        requireMock("fetch/first/test.json", { data: true })
-        requireMock("fetch/first/second/test.json", { data: true })
+        requireMock("fetch/genmaicha/oolong.json", { data: true })
+        requireMock("fetch/genmaicha/sencha/bancha.json", { data: true })
       })
 
       /* Test: should return data */
@@ -321,7 +321,7 @@ function constructorShouldThrowOnNonExistingBaseDirectory() {
 
 /* Test: #constructor should throw on file */
 function constructorShouldThrowOnFile() {
-  const directory = "constructor/suite/test"
+  const directory = "constructor/genmaicha/oolong"
   expect(() => {
     new FileSystem(directory)
   }).toThrow(
@@ -334,7 +334,7 @@ function constructorShouldThrowOnFile() {
 
 /* Test: #valid should succeed on existing suite */
 function validShouldSucceedOnExistingSuite() {
-  expect(new FileSystem("valid").valid("suite"))
+  expect(new FileSystem("valid").valid("genmaicha"))
     .toBe(true)
 }
 
@@ -346,16 +346,16 @@ function validShouldFailOnNonExistingSuite() {
 
 /* Test: #valid should fail on file */
 function validShouldFailOnFile() {
-  expect(new FileSystem("valid").valid("test"))
+  expect(new FileSystem("valid").valid("sencha"))
     .toBe(false)
 }
 
 /* Test: #valid should respect scope */
 function validShouldRespectScope() {
   const scope = ["agent", "os"]
-  new FileSystem("valid").valid("suite", scope)
+  new FileSystem("valid").valid("genmaicha", scope)
   expect(path.join)
-    .toHaveBeenCalledWith("valid", ...scope, "suite")
+    .toHaveBeenCalledWith("valid", ...scope, "genmaicha")
 }
 
 /* Test: #valid should throw on empty suite name */
@@ -377,7 +377,7 @@ function validShouldThrowOnInvalidSuiteName() {
 /* Test: #valid should throw on invalid scope */
 function validShouldThrowOnInvalidScope() {
   expect(() => {
-    new FileSystem("valid").valid("test", null)
+    new FileSystem("valid").valid("oolong", null)
   }).toThrow(
     new TypeError("Invalid scope: \"null\""))
 }
@@ -388,17 +388,17 @@ function validShouldThrowOnInvalidScope() {
 
 /* Test: #fetch should return data */
 function fetchShouldReturnData(done) {
-  new FileSystem("fetch").fetch("first")
+  new FileSystem("fetch").fetch("genmaicha")
     .then(suite => {
       expect(suite)
         .toEqual({
           specs: {
-            test: { data: true }
+            oolong: { data: true }
           },
           suites: {
-            second: {
+            sencha: {
               specs: {
-                test: { data: true }
+                bancha: { data: true }
               }
             }
           }
@@ -410,12 +410,12 @@ function fetchShouldReturnData(done) {
 
 /* Test: #fetch should return nested data */
 function fetchShouldReturnNestedData(done) {
-  new FileSystem("fetch").fetch("first/second")
+  new FileSystem("fetch").fetch("genmaicha/sencha")
     .then(suite => {
       expect(suite)
         .toEqual({
           specs: {
-            test: { data: true }
+            bancha: { data: true }
           }
         })
       done()
@@ -426,13 +426,13 @@ function fetchShouldReturnNestedData(done) {
 /* Test: #fetch should respect scope */
 function fetchShouldRespectScope(done) {
   const scope = ["agent", "os"]
-  new FileSystem("fetch").fetch("suite", scope)
+  new FileSystem("fetch").fetch("hojicha", scope)
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(jasmine.any(Error))
       expect(path.join)
-        .toHaveBeenCalledWith("fetch", ...scope, "suite")
+        .toHaveBeenCalledWith("fetch", ...scope, "hojicha")
       done()
     })
 }
@@ -461,7 +461,7 @@ function fetchShouldThrowOnInvalidSuiteName(done) {
 
 /* Test: #fetch should throw on invalid scope */
 function fetchShouldThrowOnInvalidScope(done) {
-  new FileSystem("fetch").fetch("test", null)
+  new FileSystem("fetch").fetch("matcha", null)
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -472,54 +472,27 @@ function fetchShouldThrowOnInvalidScope(done) {
 
 /* Test: #fetch should throw on invalid contents */
 function fetchShouldThrowOnInvalidContents(done) {
-  fsMock.restore()
-  fsMock({
-    "fetch": {
-      "suite": {
-        "test.json": ""
-      }
-    }
-  })
-
-  /* Mock required files */
-  requireMock("fetch/suite/test.json", "")
-
-  /* We need to override the filesystem mock specifically for this test, so we
-     can test how it behaves when loading invalid data */
-  new FileSystem("fetch").fetch("suite")
+  requireMock("fetch/genmaicha/oolong.json", "")
+  new FileSystem("fetch").fetch("genmaicha")
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(
-          new TypeError("Invalid contents: \"fetch/suite/test.json\""))
+          new TypeError("Invalid contents: \"fetch/genmaicha/oolong.json\""))
       done()
     })
 }
 
 /* Test: #fetch should throw on nested invalid contents */
 function fetchShouldThrowOnNestedInvalidContents(done) {
-  fsMock.restore()
-  fsMock({
-    "fetch": {
-      "first": {
-        "second": {
-          "test.json": ""
-        }
-      }
-    }
-  })
-
-  /* Mock required files */
-  requireMock("fetch/first/second/test.json", "")
-
-  /* We need to override the filesystem mock specifically for this test, so we
-     can test how it behaves when loading invalid data */
-  new FileSystem("fetch").fetch("first")
+  requireMock("fetch/genmaicha/sencha/bancha.json", "")
+  new FileSystem("fetch").fetch("genmaicha")
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(
-          new TypeError("Invalid contents: \"fetch/first/second/test.json\""))
+          new TypeError(
+            "Invalid contents: \"fetch/genmaicha/sencha/bancha.json\""))
       done()
     })
 }
@@ -541,7 +514,7 @@ function fetchShouldThrowOnFailedStat(done) {
     .and.callFake((file, cb) => {
       cb("fail")
     })
-  new FileSystem("fetch").fetch("first")
+  new FileSystem("fetch").fetch("genmaicha")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -556,22 +529,22 @@ function fetchShouldThrowOnFailedStat(done) {
 
 /* Test: #store should persist data */
 function storeShouldPersistData(done) {
-  new FileSystem("store").store("first", {
+  new FileSystem("store").store("genmaicha", {
     specs: {
-      test: { data: true }
+      oolong: { data: true }
     },
     suites: {
-      second: {
+      sencha: {
         specs: {
-          test: { data: true }
+          bancha: { data: true }
         }
       }
     }
   })
     .then(() => {
-      expect(fs.readFileSync("store/first/test.json", "utf8"))
+      expect(fs.readFileSync("store/genmaicha/oolong.json", "utf8"))
         .toEqual("{\"data\":true}")
-      expect(fs.readFileSync("store/first/second/test.json", "utf8"))
+      expect(fs.readFileSync("store/genmaicha/sencha/bancha.json", "utf8"))
         .toEqual("{\"data\":true}")
       done()
     })
@@ -580,15 +553,13 @@ function storeShouldPersistData(done) {
 
 /* Test: #store should persist data */
 function storeShouldPersistNestedData(done) {
-  new FileSystem("store").store("first/second", {
+  new FileSystem("store").store("genmaicha/sencha", {
     specs: {
-      test: { data: true }
+      bancha: { data: true }
     }
   })
     .then(() => {
-      expect(fs.existsSync("store/first/test.json"))
-        .toBe(false)
-      expect(fs.readFileSync("store/first/second/test.json", "utf8"))
+      expect(fs.readFileSync("store/genmaicha/sencha/bancha.json", "utf8"))
         .toEqual("{\"data\":true}")
       done()
     })
@@ -598,10 +569,10 @@ function storeShouldPersistNestedData(done) {
 /* Test: #store should respect scope */
 function storeShouldRespectScope(done) {
   const scope = ["agent", "os"]
-  new FileSystem("store").store("suite", {}, scope)
+  new FileSystem("store").store("hojicha", {}, scope)
     .then(() => {
       expect(path.join)
-        .toHaveBeenCalledWith("store", ...scope, "suite")
+        .toHaveBeenCalledWith("store", ...scope, "hojicha")
       done()
     })
     .catch(done.fail)
@@ -631,7 +602,7 @@ function storeShouldThrowOnInvalidSuiteName(done) {
 
 /* Test: #store should throw on invalid scope */
 function storeShouldThrowOnInvalidScope(done) {
-  new FileSystem("store").store("test", {}, null)
+  new FileSystem("store").store("matcha", {}, null)
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -642,7 +613,7 @@ function storeShouldThrowOnInvalidScope(done) {
 
 /* Test: #store should throw on invalid data */
 function storeShouldThrowOnInvalidData(done) {
-  new FileSystem("store").store("test", "invalid")
+  new FileSystem("store").store("shincha", "invalid")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -653,14 +624,14 @@ function storeShouldThrowOnInvalidData(done) {
 
 /* Test: #store should throw on invalid contents */
 function storeShouldThrowOnInvalidContents(done) {
-  new FileSystem("store").store("first", {
+  new FileSystem("store").store("genmaicha", {
     specs: {
-      test: { data: true }
+      oolong: { data: true }
     },
     suites: {
-      second: {
+      sencha: {
         specs: {
-          test: "invalid"
+          bancha: "invalid"
         }
       }
     }
@@ -680,9 +651,9 @@ function storeShouldThrowOnFailedWrite(done) {
     .and.callFake((file, data, cb) => {
       cb("fail")
     })
-  new FileSystem("store").store("first", {
+  new FileSystem("store").store("genmaicha", {
     specs: {
-      test: { data: true }
+      oolong: { data: true }
     }
   })
     .then(done.fail)
@@ -712,11 +683,11 @@ function factoryShouldUseExistingBaseDirectory(done) {
 
 /* Test: .factory should create non-existing base directory */
 function factoryShouldCreateNonExistingBaseDirectory(done) {
-  factory("new/base/directory")
+  factory("genmaicha/sencha/bancha")
     .then(storage => {
       expect(storage.base)
-        .toEqual("new/base/directory")
-      expect(fs.existsSync("new/base/directory"))
+        .toEqual("genmaicha/sencha/bancha")
+      expect(fs.existsSync("genmaicha/sencha/bancha"))
         .toBe(true)
       done()
     })
