@@ -30,6 +30,7 @@
  * @return {Function} Connect-compatible middleware
  */
 export default () => {
+  // eslint-disable-next-line max-params, no-unused-vars
   return (err, req, res, next) => {
     res.setHeader("Content-Type", "application/json")
     res.end(JSON.stringify({
