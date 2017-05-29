@@ -25,7 +25,11 @@ import fsMock from "mock-fs"
 import path from "path"
 import requireMock from "mock-require"
 
-import { factory, default as FileSystem } from "~/src/storage/filesystem"
+import {
+  PATTERN,
+  factory,
+  default as FileSystem
+} from "~/src/storage/filesystem"
 
 /* ----------------------------------------------------------------------------
  * Declarations
@@ -40,6 +44,35 @@ describe("Storage", () => {
     /* Reset mocks */
     afterEach(() => {
       fsMock.restore()
+    })
+
+    /* @PATTERN */
+    describe("@PATTERN", () => {
+
+      /* Test: should succeed on suite name */
+      it("should succeed on suite name",
+        patternShouldSucceedOnSuiteName
+      )
+
+      /* Test: should succeed on nested suite name */
+      it("should succeed on nested suite name",
+        patternShouldSuceedOnNestedSuiteName
+      )
+
+      /* Test: should fail on empty suite name */
+      it("should fail on empty suite name",
+        patternShouldFailOnEmptySuiteName
+      )
+
+      /* Test: should fail on empty nested suite name */
+      it("should fail on empty nested suite name",
+        patternShouldFailOnEmptyNestedSuiteName
+      )
+
+      /* Test: should fail on reserved characters */
+      it("should fail on reserved characters",
+        patternShouldFailOnReservedCharacters
+      )
     })
 
     /* #constructor */
@@ -299,6 +332,41 @@ describe("Storage", () => {
 })
 
 /* ----------------------------------------------------------------------------
+ * Definitions: @PATTERN
+ * ------------------------------------------------------------------------- */
+
+/* Test: @PATTERN should succeed on suite name */
+function patternShouldSucceedOnSuiteName() {
+  expect("genmaicha")
+    .toMatch(PATTERN)
+}
+
+/* Test: @PATTERN should succeed on nested suite name */
+function patternShouldSuceedOnNestedSuiteName() {
+  expect("genmaicha/oolong")
+    .toMatch(PATTERN)
+}
+
+/* Test: @PATTERN should fail on empty suite name */
+function patternShouldFailOnEmptySuiteName() {
+  expect("")
+    .not.toMatch(PATTERN)
+}
+
+/* Test: @PATTERN should fail on empty nested suite name */
+function patternShouldFailOnEmptyNestedSuiteName() {
+  expect("genmaicha/")
+    .not.toMatch(PATTERN)
+}
+
+/* Test: @PATTERN should fail on reserved characters */
+function patternShouldFailOnReservedCharacters() {
+  ":*?\"<>|".split("").forEach(char =>
+    expect(char)
+      .not.toMatch(PATTERN))
+}
+
+/* ----------------------------------------------------------------------------
  * Definitions: #constructor
  * ------------------------------------------------------------------------- */
 
@@ -316,7 +384,7 @@ function constructorShouldThrowOnNonExistingBaseDirectory() {
   expect(() => {
     new FileSystem(directory)
   }).toThrow(
-    new TypeError(`Invalid base: "${directory}"`))
+    new TypeError(`Invalid base: '${directory}'`))
 }
 
 /* Test: #constructor should throw on file */
@@ -325,7 +393,7 @@ function constructorShouldThrowOnFile() {
   expect(() => {
     new FileSystem(directory)
   }).toThrow(
-    new TypeError(`Invalid base: "${directory}"`))
+    new TypeError(`Invalid base: '${directory}'`))
 }
 
 /* ----------------------------------------------------------------------------
@@ -360,18 +428,24 @@ function validShouldRespectScope() {
 
 /* Test: #valid should throw on empty suite name */
 function validShouldThrowOnEmptySuiteName() {
+  spyOn(String.prototype, "match")
   expect(() => {
     new FileSystem("valid").valid("")
   }).toThrow(
-    new TypeError("Invalid suite name: \"\""))
+    new TypeError("Invalid suite name: ''"))
+  expect(String.prototype.match)
+    .toHaveBeenCalledWith(PATTERN)
 }
 
 /* Test: #valid should throw on invalid suite name */
 function validShouldThrowOnInvalidSuiteName() {
+  spyOn(String.prototype, "match")
   expect(() => {
     new FileSystem("valid").valid(null)
   }).toThrow(
-    new TypeError("Invalid suite name: \"null\""))
+    new TypeError("Invalid suite name: null"))
+  expect(String.prototype.match)
+    .not.toHaveBeenCalledWith(PATTERN)
 }
 
 /* Test: #valid should throw on invalid scope */
@@ -379,7 +453,7 @@ function validShouldThrowOnInvalidScope() {
   expect(() => {
     new FileSystem("valid").valid("oolong", null)
   }).toThrow(
-    new TypeError("Invalid scope: \"null\""))
+    new TypeError("Invalid scope: null"))
 }
 
 /* ----------------------------------------------------------------------------
@@ -439,22 +513,28 @@ function fetchShouldRespectScope(done) {
 
 /* Test: #fetch should throw on empty suite name */
 function fetchShouldThrowOnEmptySuiteName(done) {
+  spyOn(String.prototype, "match")
   new FileSystem("fetch").fetch("")
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid suite name: \"\""))
+        .toEqual(new TypeError("Invalid suite name: ''"))
+      expect(String.prototype.match)
+        .toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
 
 /* Test: #fetch should throw on invalid suite name */
 function fetchShouldThrowOnInvalidSuiteName(done) {
+  spyOn(String.prototype, "match")
   new FileSystem("fetch").fetch(null)
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid suite name: \"null\""))
+        .toEqual(new TypeError("Invalid suite name: null"))
+      expect(String.prototype.match)
+        .not.toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
@@ -465,7 +545,7 @@ function fetchShouldThrowOnInvalidScope(done) {
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid scope: \"null\""))
+        .toEqual(new TypeError("Invalid scope: null"))
       done()
     })
 }
@@ -478,7 +558,7 @@ function fetchShouldThrowOnInvalidContents(done) {
     .catch(err => {
       expect(err)
         .toEqual(
-          new TypeError("Invalid contents: \"fetch/genmaicha/oolong.json\""))
+          new TypeError("Invalid contents: 'fetch/genmaicha/oolong.json'"))
       done()
     })
 }
@@ -492,7 +572,7 @@ function fetchShouldThrowOnNestedInvalidContents(done) {
       expect(err)
         .toEqual(
           new TypeError(
-            "Invalid contents: \"fetch/genmaicha/sencha/bancha.json\""))
+            "Invalid contents: 'fetch/genmaicha/sencha/bancha.json'"))
       done()
     })
 }
@@ -580,22 +660,28 @@ function storeShouldRespectScope(done) {
 
 /* Test: #store should throw on empty suite name */
 function storeShouldThrowOnEmptySuiteName(done) {
+  spyOn(String.prototype, "match")
   new FileSystem("store").store("", {})
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid suite name: \"\""))
+        .toEqual(new TypeError("Invalid suite name: ''"))
+      expect(String.prototype.match)
+        .toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
 
 /* Test: #store should throw on invalid suite name */
 function storeShouldThrowOnInvalidSuiteName(done) {
+  spyOn(String.prototype, "match")
   new FileSystem("store").store(null, {})
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid suite name: \"null\""))
+        .toEqual(new TypeError("Invalid suite name: null"))
+      expect(String.prototype.match)
+        .not.toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
@@ -606,7 +692,7 @@ function storeShouldThrowOnInvalidScope(done) {
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid scope: \"null\""))
+        .toEqual(new TypeError("Invalid scope: null"))
       done()
     })
 }
@@ -617,7 +703,7 @@ function storeShouldThrowOnInvalidData(done) {
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid data: \"invalid\""))
+        .toEqual(new TypeError("Invalid data: 'invalid'"))
       done()
     })
 }
@@ -640,7 +726,7 @@ function storeShouldThrowOnInvalidContents(done) {
     .catch(err => {
       expect(err)
         .toEqual(
-        new TypeError("Invalid contents: \"invalid\""))
+        new TypeError("Invalid contents: 'invalid'"))
       done()
     })
 }

@@ -22,6 +22,7 @@
 
 import body from "body-parser"
 import useragent from "useragent"
+import { inspect } from "util"
 
 import Router from "router"
 
@@ -38,7 +39,7 @@ import Router from "router"
  */
 export const get = init => {
   if (!(init instanceof Promise))
-    throw new TypeError(`Invalid initializer: "${init}"`)
+    throw new TypeError(`Invalid initializer: ${inspect(init)}`)
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
@@ -52,7 +53,7 @@ export const get = init => {
       if (!storage.valid(req.params.path, scope)) {
         res.statusCode = 404 // Not Found
         return Promise.reject(new ReferenceError("Invalid path: " +
-          `${req.params.path} not found for ${scope.join(", ")}`))
+          `${inspect(req.params.path)} not found for ${inspect(scope)}`))
       }
 
       /* Fetch data from storage */
@@ -81,7 +82,7 @@ export const get = init => {
  */
 export const post = init => {
   if (!(init instanceof Promise))
-    throw new TypeError(`Invalid initializer: "${init}"`)
+    throw new TypeError(`Invalid initializer: ${inspect(init)}`)
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
@@ -120,7 +121,7 @@ export const post = init => {
  */
 export default (init, ref = null) => {
   if (ref && !(ref instanceof Router))
-    throw new TypeError(`Invalid router: "${ref}"`)
+    throw new TypeError(`Invalid router: ${inspect(ref)}`)
 
   /* Create router and add JSON parser middleware */
   const router = ref || new Router()

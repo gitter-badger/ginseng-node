@@ -194,7 +194,7 @@ function defaultShouldThrowOnInvalidInitializer() {
   expect(() => {
     middleware.default(null)
   }).toThrow(
-    new TypeError("Invalid initializer: \"null\""))
+    new TypeError("Invalid initializer: null"))
 }
 
 /* Test: .default should throw on invalid router */
@@ -202,7 +202,7 @@ function defaultShouldThrowOnInvalidRouter() {
   expect(() => {
     middleware.default(Promise.resolve(), "invalid")
   }).toThrow(
-    new TypeError("Invalid router: \"invalid\""))
+    new TypeError("Invalid router: 'invalid'"))
 }
 
 /* ----------------------------------------------------------------------------
@@ -311,8 +311,8 @@ function getShouldSetHttpStatusTo404OnNonExistingDirectory(done) {
       expect(res.statusCode)
         .toEqual(404)
       expect(next)
-        .toHaveBeenCalledWith(
-          new ReferenceError("Invalid path: invalid not found for agent, os"))
+        .toHaveBeenCalledWith(new ReferenceError(
+          "Invalid path: 'invalid' not found for [ 'agent', 'os' ]"))
       done()
     })
     .catch(done.fail)
@@ -352,7 +352,7 @@ function getShouldThrowOnInvalidInitializer() {
   expect(() => {
     middleware.get(null)
   }).toThrow(
-    new TypeError("Invalid initializer: \"null\""))
+    new TypeError("Invalid initializer: null"))
 }
 
 /* ----------------------------------------------------------------------------
@@ -426,5 +426,5 @@ function postShouldThrowOnInvalidInitializer() {
   expect(() => {
     middleware.post(null)
   }).toThrow(
-    new TypeError("Invalid initializer: \"null\""))
+    new TypeError("Invalid initializer: null"))
 }

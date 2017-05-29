@@ -24,6 +24,29 @@ import fs from "fs"
 import merge from "deepmerge"
 import mkdirp from "mkdirp-promise"
 import path from "path"
+import { inspect } from "util"
+
+/* ----------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Name specification for test suites and specifications
+ *
+ * This test is necessary, as the file system storage takes the path/name of
+ * the suite, splits it at slashes and writes the specifications and nested
+ * suites to disk. While Linux and macOS allow all ASCII characters inside
+ * file names except null and /, Windows does not support /:*?"<>|.
+ *
+ * @type {RegExp} Regular expression matching valid file names
+ */
+export const PATTERN = new RegExp(
+  "^" +
+    "[ !#$%&'()+,.0-9;=@A-Z\\[\\]^_a-z{}~-]+" +
+    "(\/" +
+      "[ !#$%&'()+,.0-9;=@A-Z\\[\\]^_a-z{}~-]+" +
+    ")*" +
+  "$")
 
 /* ----------------------------------------------------------------------------
  * Class
@@ -42,7 +65,7 @@ export default class FileSystem {
    */
   constructor(base) {
     if (!(fs.existsSync(base) && fs.statSync(base).isDirectory()))
-      throw new Error(`Invalid base: "${base}"`)
+      throw new Error(`Invalid base: ${inspect(base)}`)
 
     /* Set base path */
     this.base_ = base
@@ -57,10 +80,11 @@ export default class FileSystem {
    * @return {Boolean} Test result
    */
   valid(suite, scope = []) {
-    if (typeof suite !== "string" || !suite.length)
-      throw new TypeError(`Invalid suite name: "${suite}"`)
-    if (!(scope instanceof Array))
-      throw new TypeError(`Invalid scope: "${scope}"`)
+    if (typeof suite !== "string" || !suite.match(PATTERN))
+      throw new TypeError(`Invalid suite name: ${inspect(suite)}`)
+    if (!(scope instanceof Array) || scope.find(part =>
+        typeof part !== "string" || !part.match(PATTERN)))
+      throw new TypeError(`Invalid scope: ${inspect(scope)}`)
 
     /* Check for existing directory */
     const directory = path.join(this.base_, ...scope, suite)
@@ -80,10 +104,11 @@ export default class FileSystem {
    */
   fetch(suite, scope = []) {
     return new Promise((resolve, reject) => {
-      if (typeof suite !== "string" || !suite.length)
-        return reject(new TypeError(`Invalid suite name: "${suite}"`))
-      if (!(scope instanceof Array))
-        return reject(new TypeError(`Invalid scope: "${scope}"`))
+      if (typeof suite !== "string" || !suite.match(PATTERN))
+        return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
+      if (!(scope instanceof Array) || scope.find(part =>
+          typeof part !== "string" || !part.match(PATTERN)))
+        return reject(new TypeError(`Invalid scope: ${inspect(scope)}`))
 
       /* Traverse directory */
       const directory = path.join(this.base_, ...scope, suite)
@@ -106,7 +131,7 @@ export default class FileSystem {
                   return resolveFile({ specs: { [spec]: require(file) } })
                 } catch (_) {
                   return rejectFile(
-                    new TypeError(`Invalid contents: "${file}"`))
+                    new TypeError(`Invalid contents: ${inspect(file)}`))
                 }
 
               /* Recurse on nested test suite */
@@ -147,12 +172,13 @@ export default class FileSystem {
    */
   store(suite, data, scope = []) {
     return new Promise((resolve, reject) => {
-      if (typeof suite !== "string" || !suite.length)
-        return reject(new TypeError(`Invalid suite name: "${suite}"`))
+      if (typeof suite !== "string" || !suite.match(PATTERN))
+        return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
       if (typeof data !== "object")
-        return reject(new TypeError(`Invalid data: "${data}"`))
-      if (!(scope instanceof Array))
-        return reject(new TypeError(`Invalid scope: "${scope}"`))
+        return reject(new TypeError(`Invalid data: ${inspect(data)}`))
+      if (!(scope instanceof Array) || scope.find(part =>
+          typeof part !== "string" || !part.match(PATTERN)))
+        return reject(new TypeError(`Invalid scope: ${inspect(scope)}`))
       resolve()
     })
 
@@ -168,8 +194,8 @@ export default class FileSystem {
           ...Object.keys(data.specs || {}).map(name => {
             return new Promise((resolveSpec, rejectSpec) => {
               if (typeof data.specs[name] !== "object")
-                return rejectSpec(
-                  new TypeError(`Invalid contents: "${data.specs[name]}"`))
+                return rejectSpec(new TypeError(
+                  `Invalid contents: ${inspect(data.specs[name])}`))
 
               /* Serialize data and write to file */
               const file = path.join(directory, `${name}.json`)
