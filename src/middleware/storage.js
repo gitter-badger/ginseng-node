@@ -22,7 +22,9 @@
 
 import body from "body-parser"
 import useragent from "useragent"
-import { inspect } from "util"
+import {
+  inspect
+} from "util"
 
 import Router from "router"
 
@@ -101,7 +103,7 @@ export const post = init => {
 
       /* Forward unhandled errors to error handler */
       .catch(err => {
-        res.statusCode = 500
+        res.statusCode = 500 // Internal Server Error
         next(err)
       })
   }
@@ -115,7 +117,7 @@ export const post = init => {
  * Create a router
  *
  * @param {Promise<Object>} init - Promise resolving with storage
- * @param {Router} [ref] - Router reference, if given
+ * @param {Router} [ref=null] - Router reference, if given
  *
  * @return {Router} Router
  */

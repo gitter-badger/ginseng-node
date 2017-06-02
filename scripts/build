@@ -34,4 +34,4 @@ fi
 rm -rf dist
 
 # Transpile sources to ES5
-"$(yarn bin)"/babel src --out-dir dist
+"$(yarn bin)"/babel src --out-dir dist --copy-files

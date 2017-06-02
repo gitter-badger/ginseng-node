@@ -22,135 +22,134 @@
 
 import httpMocks from "node-mocks-http"
 import useragent from "useragent"
-
 import Router from "router"
 
-import * as middleware from "~/src/middleware/storage"
+import {
+  get,
+  post,
+  default as factory
+} from "~/src/middleware/storage"
 
 /* ----------------------------------------------------------------------------
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Middleware */
-describe("Middleware", () => {
+/* Middleware.storage */
+describe("Middleware.storage", () => {
 
-  /* storage */
-  describe("storage", () => {
+  /* Test: should return router */
+  it("should return router",
+    defaultShouldReturnRouter
+  )
 
-    /* Test: should return router */
-    it("should return router",
-      defaultShouldReturnRouter
+  /* Test: should return default router */
+  it("should return default router",
+    defaultShouldReturnDefaultRouter
+  )
+
+  /* Test: should register HTTP GET handler */
+  it("should register HTTP GET handler",
+    defaultShouldRegisterHttpGetHandler
+  )
+
+  /* Test: should register HTTP POST handler */
+  it("should register HTTP POST handler",
+    defaultShouldRegisterHttpPostHandler
+  )
+
+  /* Test: should throw on invalid initializer */
+  it("should throw on invalid initializer",
+    defaultShouldThrowOnInvalidInitializer
+  )
+
+  /* Test: should throw on invalid router */
+  it("should throw on invalid router",
+    defaultShouldThrowOnInvalidRouter
+  )
+
+  /* .get */
+  describe(".get", () => {
+
+    /* Register spies */
+    beforeEach(() => {
+      spyOn(useragent, "parse")
+        .and.returnValue({
+          toAgent: () => "agent",
+          os: {
+            toString: () => "os"
+          }
+        })
+    })
+
+    /* Test: should return connect-compatible middleware */
+    it("should return connect-compatible middleware",
+      getShouldReturnConnectCompatibleMiddleware
     )
 
-    /* Test: should return default router */
-    it("should return default router",
-      defaultShouldReturnDefaultRouter
+    /* Test: should set content type on success */
+    it("should set content type on success",
+      getShouldSetContentTypeOnSuccess
     )
 
-    /* Test: should register HTTP GET handler */
-    it("should register HTTP GET handler",
-      defaultShouldRegisterHttpGetHandler
+    /* Test: should not set content type on error */
+    it("should not set content type on error",
+      getShouldNotSetContentTypeOnError
     )
 
-    /* Test: should register HTTP POST handler */
-    it("should register HTTP POST handler",
-      defaultShouldRegisterHttpPostHandler
+    /* Test: should set HTTP status to 200 on success */
+    it("should set HTTP status to 200 on success",
+      getShouldSetHttpStatusTo200OnSuccess
+    )
+
+    /* Test: should set HTTP status to 404 on non-existing directory */
+    it("should set HTTP status to 404 on non-existing directory",
+      getShouldSetHttpStatusTo404OnNonExistingDirectory
+    )
+
+    /* Test: should set HTTP status to 500 on internal error */
+    it("should set HTTP status to 500 on internal error",
+      getShouldSetHttpStatusTo500OnInternalError
     )
 
     /* Test: should throw on invalid initializer */
     it("should throw on invalid initializer",
-      defaultShouldThrowOnInvalidInitializer
+      getShouldThrowOnInvalidInitializer
     )
+  })
 
-    /* Test: should throw on invalid router */
-    it("should throw on invalid router",
-      defaultShouldThrowOnInvalidRouter
-    )
+  /* .post */
+  describe(".post", () => {
 
-    /* .get */
-    describe(".get", () => {
-
-      /* Register spies */
-      beforeEach(() => {
-        spyOn(useragent, "parse")
-          .and.returnValue({
-            toAgent: () => "agent",
-            os: {
-              toString: () => "os"
-            }
-          })
-      })
-
-      /* Test: should return connect-compatible middleware */
-      it("should return connect-compatible middleware",
-        getShouldReturnConnectCompatibleMiddleware
-      )
-
-      /* Test: should set content type on success */
-      it("should set content type on success",
-        getShouldSetContentTypeOnSuccess
-      )
-
-      /* Test: should not set content type on error */
-      it("should not set content type on error",
-        getShouldNotSetContentTypeOnError
-      )
-
-      /* Test: should set HTTP status to 200 on success */
-      it("should set HTTP status to 200 on success",
-        getShouldSetHttpStatusTo200OnSuccess
-      )
-
-      /* Test: should set HTTP status to 404 on non-existing directory */
-      it("should set HTTP status to 404 on non-existing directory",
-        getShouldSetHttpStatusTo404OnNonExistingDirectory
-      )
-
-      /* Test: should set HTTP status to 500 on internal error */
-      it("should set HTTP status to 500 on internal error",
-        getShouldSetHttpStatusTo500OnInternalError
-      )
-
-      /* Test: should throw on invalid initializer */
-      it("should throw on invalid initializer",
-        getShouldThrowOnInvalidInitializer
-      )
+    /* Register spies */
+    beforeEach(() => {
+      spyOn(useragent, "parse")
+        .and.returnValue({
+          toAgent: () => "agent",
+          os: {
+            toString: () => "os"
+          }
+        })
     })
 
-    /* .post */
-    describe(".post", () => {
+    /* Test: should return connect-compatible middleware */
+    it("should return connect-compatible middleware",
+      postShouldReturnConnectCompatibleMiddleware
+    )
 
-      /* Register spies */
-      beforeEach(() => {
-        spyOn(useragent, "parse")
-          .and.returnValue({
-            toAgent: () => "agent",
-            os: {
-              toString: () => "os"
-            }
-          })
-      })
+    /* Test: should set HTTP status to 200 on success */
+    it("should set HTTP status to 200 on success",
+      postShouldSetHttpStatusTo200OnSuccess
+    )
 
-      /* Test: should return connect-compatible middleware */
-      it("should return connect-compatible middleware",
-        postShouldReturnConnectCompatibleMiddleware
-      )
+    /* Test: should set HTTP status to 500 on internal error */
+    it("should set HTTP status to 500 on internal error",
+      postShouldSetHttpStatusTo500OnInternalError
+    )
 
-      /* Test: should set HTTP status to 200 on success */
-      it("should set HTTP status to 200 on success",
-        postShouldSetHttpStatusTo200OnSuccess
-      )
-
-      /* Test: should set HTTP status to 500 on internal error */
-      it("should set HTTP status to 500 on internal error",
-        postShouldSetHttpStatusTo500OnInternalError
-      )
-
-      /* Test: should throw on invalid initializer */
-      it("should throw on invalid initializer",
-        postShouldThrowOnInvalidInitializer
-      )
-    })
+    /* Test: should throw on invalid initializer */
+    it("should throw on invalid initializer",
+      postShouldThrowOnInvalidInitializer
+    )
   })
 })
 
@@ -161,13 +160,13 @@ describe("Middleware", () => {
 /* Test: .default should return router */
 function defaultShouldReturnRouter() {
   const router = new Router()
-  expect(middleware.default(Promise.resolve(), router))
+  expect(factory(Promise.resolve(), router))
     .toEqual(router)
 }
 
 /* Test: .default should return default router */
 function defaultShouldReturnDefaultRouter() {
-  expect(middleware.default(Promise.resolve()))
+  expect(factory(Promise.resolve()))
     .toEqual(jasmine.any(Router))
 }
 
@@ -175,7 +174,7 @@ function defaultShouldReturnDefaultRouter() {
 function defaultShouldRegisterHttpGetHandler() {
   const router = new Router()
   spyOn(router, "get")
-  middleware.default(Promise.resolve(), router)
+  factory(Promise.resolve(), router)
   expect(router.get)
     .toHaveBeenCalledWith("/:path(\\S*)?", jasmine.any(Function))
 }
@@ -184,7 +183,7 @@ function defaultShouldRegisterHttpGetHandler() {
 function defaultShouldRegisterHttpPostHandler() {
   const router = new Router()
   spyOn(router, "post")
-  middleware.default(Promise.resolve(), router)
+  factory(Promise.resolve(), router)
   expect(router.post)
     .toHaveBeenCalledWith("/:path(\\S*)?", jasmine.any(Function))
 }
@@ -192,7 +191,7 @@ function defaultShouldRegisterHttpPostHandler() {
 /* Test: .default should throw on invalid initializer */
 function defaultShouldThrowOnInvalidInitializer() {
   expect(() => {
-    middleware.default(null)
+    factory(null)
   }).toThrow(
     new TypeError("Invalid initializer: null"))
 }
@@ -200,7 +199,7 @@ function defaultShouldThrowOnInvalidInitializer() {
 /* Test: .default should throw on invalid router */
 function defaultShouldThrowOnInvalidRouter() {
   expect(() => {
-    middleware.default(Promise.resolve(), "invalid")
+    factory(Promise.resolve(), "invalid")
   }).toThrow(
     new TypeError("Invalid router: 'invalid'"))
 }
@@ -211,7 +210,7 @@ function defaultShouldThrowOnInvalidRouter() {
 
 /* Test: .get should return connect-compatible middleware */
 function getShouldReturnConnectCompatibleMiddleware() {
-  expect(middleware.get(Promise.resolve()).length)
+  expect(get(Promise.resolve()).length)
     .toEqual(3)
 }
 
@@ -229,7 +228,7 @@ function getShouldSetContentTypeOnSuccess(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.get(Promise.resolve(storage))
+  const handler = get(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._getHeaders())
@@ -251,7 +250,7 @@ function getShouldNotSetContentTypeOnError(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.get(Promise.resolve(storage))
+  const handler = get(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._getHeaders())
@@ -275,7 +274,7 @@ function getShouldSetHttpStatusTo200OnSuccess(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.get(Promise.resolve(storage))
+  const handler = get(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._isEndCalled())
@@ -303,7 +302,7 @@ function getShouldSetHttpStatusTo404OnNonExistingDirectory(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.get(Promise.resolve(storage))
+  const handler = get(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._isEndCalled())
@@ -332,7 +331,7 @@ function getShouldSetHttpStatusTo500OnInternalError(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.get(Promise.resolve(storage))
+  const handler = get(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._isEndCalled())
@@ -350,7 +349,7 @@ function getShouldSetHttpStatusTo500OnInternalError(done) {
 /* Test: .get should throw on invalid initializer */
 function getShouldThrowOnInvalidInitializer() {
   expect(() => {
-    middleware.get(null)
+    get(null)
   }).toThrow(
     new TypeError("Invalid initializer: null"))
 }
@@ -361,7 +360,7 @@ function getShouldThrowOnInvalidInitializer() {
 
 /* Test: .post should return connect-compatible middleware */
 function postShouldReturnConnectCompatibleMiddleware() {
-  expect(middleware.post(Promise.resolve()).length)
+  expect(post(Promise.resolve()).length)
     .toEqual(3)
 }
 
@@ -377,7 +376,7 @@ function postShouldSetHttpStatusTo200OnSuccess(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.post(Promise.resolve(storage))
+  const handler = post(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._isEndCalled())
@@ -406,7 +405,7 @@ function postShouldSetHttpStatusTo500OnInternalError(done) {
         next = jasmine.createSpy("next")
 
   /* Create middleware and resolve request */
-  const handler = middleware.post(Promise.resolve(storage))
+  const handler = post(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(res._isEndCalled())
@@ -424,7 +423,7 @@ function postShouldSetHttpStatusTo500OnInternalError(done) {
 /* Test: .post should throw on invalid initializer */
 function postShouldThrowOnInvalidInitializer() {
   expect(() => {
-    middleware.post(null)
+    post(null)
   }).toThrow(
     new TypeError("Invalid initializer: null"))
 }

@@ -26,8 +26,8 @@ import path from "path"
 import requireMock from "mock-require"
 
 import {
-  PATTERN,
   factory,
+  inrange,
   default as FileSystem
 } from "~/src/storage/filesystem"
 
@@ -35,335 +35,331 @@ import {
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Storage */
-describe("Storage", () => {
+/* Storage.FileSystem */
+describe("Storage.FileSystem", () => {
 
-  /* FileSystem */
-  describe("FileSystem", () => {
+  /* Reset mocks */
+  afterEach(() => {
+    fsMock.restore()
+  })
 
-    /* Reset mocks */
-    afterEach(() => {
-      fsMock.restore()
-    })
+  /* .inrange */
+  describe(".inrange", () => {
 
-    /* @PATTERN */
-    describe("@PATTERN", () => {
+    /* Test: should succeed on suite name */
+    it("should succeed on suite name",
+      inrangeShouldSucceedOnSuiteName
+    )
 
-      /* Test: should succeed on suite name */
-      it("should succeed on suite name",
-        patternShouldSucceedOnSuiteName
-      )
+    /* Test: should succeed on nested suite name */
+    it("should succeed on nested suite name",
+      inrangeShouldSuceedOnNestedSuiteName
+    )
 
-      /* Test: should succeed on nested suite name */
-      it("should succeed on nested suite name",
-        patternShouldSuceedOnNestedSuiteName
-      )
+    /* Test: should fail on empty suite name */
+    it("should fail on empty suite name",
+      inrangeShouldFailOnEmptySuiteName
+    )
 
-      /* Test: should fail on empty suite name */
-      it("should fail on empty suite name",
-        patternShouldFailOnEmptySuiteName
-      )
+    /* Test: should fail on empty nested suite name */
+    it("should fail on empty nested suite name",
+      inrangeShouldFailOnEmptyNestedSuiteName
+    )
 
-      /* Test: should fail on empty nested suite name */
-      it("should fail on empty nested suite name",
-        patternShouldFailOnEmptyNestedSuiteName
-      )
+    /* Test: should fail on reserved characters */
+    it("should fail on reserved characters",
+      inrangeShouldFailOnReservedCharacters
+    )
+  })
 
-      /* Test: should fail on reserved characters */
-      it("should fail on reserved characters",
-        patternShouldFailOnReservedCharacters
-      )
-    })
+  /* #constructor */
+  describe("#constructor", () => {
 
-    /* #constructor */
-    describe("#constructor", () => {
+    /* Register spies and mocks */
+    beforeEach(() => {
 
-      /* Register spies and mocks */
-      beforeEach(() => {
-
-        /* Mock filesystem */
-        fsMock({
-          "constructor": {
-            "genmaicha": {
-              "oolong.json": "{ data: true }"
-            }
+      /* Mock filesystem */
+      fsMock({
+        "constructor": {
+          "genmaicha": {
+            "oolong.json": "{ data: true }"
           }
-        })
+        }
       })
-
-      /* Test: should set base directory */
-      it("should set base directory",
-        constructorShouldSetBaseDirectory
-      )
-
-      /* Test: should throw on non-existing base directory */
-      it("should throw on non-existing base directory",
-        constructorShouldThrowOnNonExistingBaseDirectory
-      )
-
-      /* Test: should throw on file */
-      it("should throw on file",
-        constructorShouldThrowOnFile
-      )
     })
 
-    /* #valid */
-    describe("#valid", () => {
+    /* Test: should set base directory */
+    it("should set base directory",
+      constructorShouldSetBaseDirectory
+    )
 
-      /* Register spies and mocks */
-      beforeEach(() => {
-        spyOn(path, "join")
-          .and.callThrough()
+    /* Test: should throw on non-existing base directory */
+    it("should throw on non-existing base directory",
+      constructorShouldThrowOnNonExistingBaseDirectory
+    )
 
-        /* Mock filesystem */
-        fsMock({
-          "valid": {
-            "sencha": "",
+    /* Test: should throw on file */
+    it("should throw on file",
+      constructorShouldThrowOnFile
+    )
+  })
+
+  /* #valid */
+  describe("#valid", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+      spyOn(path, "join")
+        .and.callThrough()
+
+      /* Mock filesystem */
+      fsMock({
+        "valid": {
+          "sencha": "",
+          "genmaicha": {
+            "oolong.json": ""
+          }
+        }
+      })
+    })
+
+    /* Test: should succeed on existing suite */
+    it("should succeed on existing suite",
+      validShouldSucceedOnExistingSuite
+    )
+
+    /* Test: should fail on non-existing suite */
+    it("should fail on non-existing suite",
+      validShouldFailOnNonExistingSuite
+    )
+
+    /* Test: should fail on file */
+    it("should fail on file",
+      validShouldFailOnFile
+    )
+
+    /* Test: should respect scope */
+    it("should respect scope",
+      validShouldRespectScope
+    )
+
+    /* Test: should throw on empty suite name */
+    it("should throw on empty suite name",
+      validShouldThrowOnEmptySuiteName
+    )
+
+    /* Test: should throw on invalid suite name */
+    it("should throw on invalid suite name",
+      validShouldThrowOnInvalidSuiteName
+    )
+
+    /* Test: should throw on invalid scope */
+    it("should throw on invalid scope",
+      validShouldThrowOnInvalidScope
+    )
+  })
+
+  /* #fetch */
+  describe("#fetch", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+      spyOn(path, "join")
+        .and.callThrough()
+
+      /* Mock filesystem */
+      fsMock({
+        "fetch": {
+          "genmaicha": {
+            "oolong.json": "",
+            "sencha": {
+              "bancha.json": ""
+            }
+          },
+          "scope": {
             "genmaicha": {
               "oolong.json": ""
             }
           }
-        })
+        }
       })
 
-      /* Test: should succeed on existing suite */
-      it("should succeed on existing suite",
-        validShouldSucceedOnExistingSuite
-      )
-
-      /* Test: should fail on non-existing suite */
-      it("should fail on non-existing suite",
-        validShouldFailOnNonExistingSuite
-      )
-
-      /* Test: should fail on file */
-      it("should fail on file",
-        validShouldFailOnFile
-      )
-
-      /* Test: should respect scope */
-      it("should respect scope",
-        validShouldRespectScope
-      )
-
-      /* Test: should throw on empty suite name */
-      it("should throw on empty suite name",
-        validShouldThrowOnEmptySuiteName
-      )
-
-      /* Test: should throw on invalid suite name */
-      it("should throw on invalid suite name",
-        validShouldThrowOnInvalidSuiteName
-      )
-
-      /* Test: should throw on invalid scope */
-      it("should throw on invalid scope",
-        validShouldThrowOnInvalidScope
-      )
+      /* Mock required files */
+      requireMock("fetch/genmaicha/oolong.json", { data: true })
+      requireMock("fetch/genmaicha/sencha/bancha.json", { data: true })
     })
 
-    /* #fetch */
-    describe("#fetch", () => {
+    /* Test: should return data */
+    it("should return data",
+      fetchShouldReturnData
+    )
 
-      /* Register spies and mocks */
-      beforeEach(() => {
-        spyOn(path, "join")
-          .and.callThrough()
+    /* Test: should return nested data */
+    it("should return nested data",
+      fetchShouldReturnNestedData
+    )
 
-        /* Mock filesystem */
-        fsMock({
-          "fetch": {
-            "genmaicha": {
-              "oolong.json": "",
-              "sencha": {
-                "bancha.json": ""
-              }
-            },
-            "scope": {
-              "genmaicha": {
-                "oolong.json": ""
-              }
-            }
-          }
-        })
+    /* Test: should respect scope */
+    it("should respect scope",
+      fetchShouldRespectScope
+    )
 
-        /* Mock required files */
-        requireMock("fetch/genmaicha/oolong.json", { data: true })
-        requireMock("fetch/genmaicha/sencha/bancha.json", { data: true })
+    /* Test: should throw on empty suite name */
+    it("should throw on empty suite name",
+      fetchShouldThrowOnEmptySuiteName
+    )
+
+    /* Test: should throw on invalid suite name */
+    it("should throw on invalid suite name",
+      fetchShouldThrowOnInvalidSuiteName
+    )
+
+    /* Test: should throw on invalid scope */
+    it("should throw on invalid scope",
+      fetchShouldThrowOnInvalidScope
+    )
+
+    /* Test: should throw on invalid contents */
+    it("should throw on invalid contents",
+      fetchShouldThrowOnInvalidContents
+    )
+
+    /* Test: should throw on nested invalid contents */
+    it("should throw on nested invalid contents",
+      fetchShouldThrowOnNestedInvalidContents
+    )
+
+    /* Test: should throw on non-existing suite */
+    it("should throw on non-existing suite",
+      fetchShouldThrowOnNonExistingSuite
+    )
+
+    /* Test: should throw on failed stat */
+    it("should throw on failed stat",
+      fetchShouldThrowOnFailedStat
+    )
+  })
+
+  /* #store */
+  describe("#store", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+      spyOn(path, "join")
+        .and.callThrough()
+
+      /* Mock filesystem */
+      fsMock({
+        "store": {}
       })
-
-      /* Test: should return data */
-      it("should return data",
-        fetchShouldReturnData
-      )
-
-      /* Test: should return nested data */                                     // TODO: should send agents correctly (path.join!)
-      it("should return nested data",
-        fetchShouldReturnNestedData
-      )
-
-      /* Test: should respect scope */
-      it("should respect scope",
-        fetchShouldRespectScope
-      )
-
-      /* Test: should throw on empty suite name */
-      it("should throw on empty suite name",
-        fetchShouldThrowOnEmptySuiteName
-      )
-
-      /* Test: should throw on invalid suite name */
-      it("should throw on invalid suite name",
-        fetchShouldThrowOnInvalidSuiteName
-      )
-
-      /* Test: should throw on invalid scope */
-      it("should throw on invalid scope",
-        fetchShouldThrowOnInvalidScope
-      )
-
-      /* Test: should throw on invalid contents */
-      it("should throw on invalid contents",
-        fetchShouldThrowOnInvalidContents
-      )
-
-      /* Test: should throw on nested invalid contents */
-      it("should throw on nested invalid contents",
-        fetchShouldThrowOnNestedInvalidContents
-      )
-
-      /* Test: should throw on non-existing suite */
-      it("should throw on non-existing suite",
-        fetchShouldThrowOnNonExistingSuite
-      )
-
-      /* Test: should throw on failed stat */
-      it("should throw on failed stat",
-        fetchShouldThrowOnFailedStat
-      )
     })
 
-    /* #store */
-    describe("#store", () => {
+    /* Test: should persist data */
+    it("should persist data",
+      storeShouldPersistData
+    )
 
-      /* Register spies and mocks */
-      beforeEach(() => {
-        spyOn(path, "join")
-          .and.callThrough()
+    /* Test: should persist nested data */
+    it("should persist nested data",
+      storeShouldPersistNestedData
+    )
 
-        /* Mock filesystem */
-        fsMock({
-          "store": {}
-        })
+    /* Test: should respect scope */
+    it("should respect scope",
+      storeShouldRespectScope
+    )
+
+    /* Test: should throw on empty suite name */
+    it("should throw on empty suite name",
+      storeShouldThrowOnEmptySuiteName
+    )
+
+    /* Test: should throw on invalid suite name */
+    it("should throw on invalid suite name",
+      storeShouldThrowOnInvalidSuiteName
+    )
+
+    /* Test: should throw on invalid scope */
+    it("should throw on invalid scope",
+      storeShouldThrowOnInvalidScope
+    )
+
+    /* Test: should throw on invalid data */
+    it("should throw on invalid data",
+      storeShouldThrowOnInvalidData
+    )
+
+    /* Test: should throw on invalid contents */
+    it("should throw on invalid contents",
+      storeShouldThrowOnInvalidContents
+    )
+
+    /* Test: should throw on failed write */
+    it("should throw on failed write",
+      storeShouldThrowOnFailedWrite
+    )
+  })
+
+  /* .factory */
+  describe(".factory", () => {
+
+    /* Register mocks */
+    beforeEach(() => {
+      fsMock({
+        "factory": {}
       })
-
-      /* Test: should persist data */
-      it("should persist data",
-        storeShouldPersistData
-      )
-
-      /* Test: should persist nested data */
-      it("should persist nested data",
-        storeShouldPersistNestedData
-      )
-
-      /* Test: should respect scope */
-      it("should respect scope",
-        storeShouldRespectScope
-      )
-
-      /* Test: should throw on empty suite name */
-      it("should throw on empty suite name",
-        storeShouldThrowOnEmptySuiteName
-      )
-
-      /* Test: should throw on invalid suite name */
-      it("should throw on invalid suite name",
-        storeShouldThrowOnInvalidSuiteName
-      )
-
-      /* Test: should throw on invalid scope */
-      it("should throw on invalid scope",
-        storeShouldThrowOnInvalidScope
-      )
-
-      /* Test: should throw on invalid data */
-      it("should throw on invalid data",
-        storeShouldThrowOnInvalidData
-      )
-
-      /* Test: should throw on invalid contents */
-      it("should throw on invalid contents",
-        storeShouldThrowOnInvalidContents
-      )
-
-      /* Test: should throw on failed write */
-      it("should throw on failed write",
-        storeShouldThrowOnFailedWrite
-      )
     })
 
-    /* .factory */
-    describe(".factory", () => {
+    /* Test: should use existing base directory */
+    it("should use existing base directory",
+      factoryShouldUseExistingBaseDirectory
+    )
 
-      /* Register mocks */
-      beforeEach(() => {
-        fsMock({
-          "factory": {}
-        })
-      })
+    /* Test: should create non-existing base directory */
+    it("should create non-existing base directory",
+      factoryShouldCreateNonExistingBaseDirectory
+    )
 
-      /* Test: should use existing base directory */
-      it("should use existing base directory",
-        factoryShouldUseExistingBaseDirectory
-      )
-
-      /* Test: should create non-existing base directory */
-      it("should create non-existing base directory",
-        factoryShouldCreateNonExistingBaseDirectory
-      )
-
-      /* Test: should throw on constructor error */
-      it("should throw on constructor error",
-        factoryShouldThrowOnConstructorError
-      )
-    })
+    /* Test: should throw on constructor error */
+    it("should throw on constructor error",
+      factoryShouldThrowOnConstructorError
+    )
   })
 })
 
 /* ----------------------------------------------------------------------------
- * Definitions: @PATTERN
+ * Definitions: .inrange
  * ------------------------------------------------------------------------- */
 
-/* Test: @PATTERN should succeed on suite name */
-function patternShouldSucceedOnSuiteName() {
-  expect("genmaicha")
-    .toMatch(PATTERN)
+/* Test: .inrange should succeed on suite name */
+function inrangeShouldSucceedOnSuiteName() {
+  expect(inrange("genmaicha"))
+    .toBe(true)
 }
 
-/* Test: @PATTERN should succeed on nested suite name */
-function patternShouldSuceedOnNestedSuiteName() {
-  expect("genmaicha/oolong")
-    .toMatch(PATTERN)
+/* Test: .inrange should succeed on nested suite name */
+function inrangeShouldSuceedOnNestedSuiteName() {
+  expect(inrange("genmaicha/oolong"))
+    .toBe(true)
 }
 
-/* Test: @PATTERN should fail on empty suite name */
-function patternShouldFailOnEmptySuiteName() {
-  expect("")
-    .not.toMatch(PATTERN)
+/* Test: .inrange should fail on empty suite name */
+function inrangeShouldFailOnEmptySuiteName() {
+  expect(inrange(""))
+    .toBe(false)
 }
 
-/* Test: @PATTERN should fail on empty nested suite name */
-function patternShouldFailOnEmptyNestedSuiteName() {
-  expect("genmaicha/")
-    .not.toMatch(PATTERN)
+/* Test: .inrange should fail on empty nested suite name */
+function inrangeShouldFailOnEmptyNestedSuiteName() {
+  expect(inrange("genmaicha/"))
+    .toBe(false)
 }
 
-/* Test: @PATTERN should fail on reserved characters */
-function patternShouldFailOnReservedCharacters() {
+/* Test: .inrange should fail on reserved characters */
+function inrangeShouldFailOnReservedCharacters() {
   ":*?\"<>|".split("").forEach(char =>
-    expect(char)
-      .not.toMatch(PATTERN))
+    expect(inrange(char))
+      .toBe(false))
 }
 
 /* ----------------------------------------------------------------------------
@@ -428,24 +424,18 @@ function validShouldRespectScope() {
 
 /* Test: #valid should throw on empty suite name */
 function validShouldThrowOnEmptySuiteName() {
-  spyOn(String.prototype, "match")
   expect(() => {
     new FileSystem("valid").valid("")
   }).toThrow(
     new TypeError("Invalid suite name: ''"))
-  expect(String.prototype.match)
-    .toHaveBeenCalledWith(PATTERN)
 }
 
 /* Test: #valid should throw on invalid suite name */
 function validShouldThrowOnInvalidSuiteName() {
-  spyOn(String.prototype, "match")
   expect(() => {
     new FileSystem("valid").valid(null)
   }).toThrow(
     new TypeError("Invalid suite name: null"))
-  expect(String.prototype.match)
-    .not.toHaveBeenCalledWith(PATTERN)
 }
 
 /* Test: #valid should throw on invalid scope */
@@ -513,28 +503,22 @@ function fetchShouldRespectScope(done) {
 
 /* Test: #fetch should throw on empty suite name */
 function fetchShouldThrowOnEmptySuiteName(done) {
-  spyOn(String.prototype, "match")
   new FileSystem("fetch").fetch("")
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(new TypeError("Invalid suite name: ''"))
-      expect(String.prototype.match)
-        .toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
 
 /* Test: #fetch should throw on invalid suite name */
 function fetchShouldThrowOnInvalidSuiteName(done) {
-  spyOn(String.prototype, "match")
   new FileSystem("fetch").fetch(null)
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(new TypeError("Invalid suite name: null"))
-      expect(String.prototype.match)
-        .not.toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
@@ -660,28 +644,22 @@ function storeShouldRespectScope(done) {
 
 /* Test: #store should throw on empty suite name */
 function storeShouldThrowOnEmptySuiteName(done) {
-  spyOn(String.prototype, "match")
   new FileSystem("store").store("", {})
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(new TypeError("Invalid suite name: ''"))
-      expect(String.prototype.match)
-        .toHaveBeenCalledWith(PATTERN)
       done()
     })
 }
 
 /* Test: #store should throw on invalid suite name */
 function storeShouldThrowOnInvalidSuiteName(done) {
-  spyOn(String.prototype, "match")
   new FileSystem("store").store(null, {})
     .then(done.fail)
     .catch(err => {
       expect(err)
         .toEqual(new TypeError("Invalid suite name: null"))
-      expect(String.prototype.match)
-        .not.toHaveBeenCalledWith(PATTERN)
       done()
     })
 }

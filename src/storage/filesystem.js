@@ -24,10 +24,12 @@ import fs from "fs"
 import merge from "deepmerge"
 import mkdirp from "mkdirp-promise"
 import path from "path"
-import { inspect } from "util"
+import {
+  inspect
+} from "util"
 
 /* ----------------------------------------------------------------------------
- * Constants
+ * Variables
  * ------------------------------------------------------------------------- */
 
 /**
@@ -40,13 +42,26 @@ import { inspect } from "util"
  *
  * @type {RegExp} Regular expression matching valid file names
  */
-export const PATTERN = new RegExp(
+const spec = new RegExp(
   "^" +
     "[ !#$%&'()+,.0-9;=@A-Z\\[\\]^_a-z{}~-]+" +
     "(\/" +
       "[ !#$%&'()+,.0-9;=@A-Z\\[\\]^_a-z{}~-]+" +
     ")*" +
   "$")
+
+/* ----------------------------------------------------------------------------
+ * Functions
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Validate suite name character range
+ *
+ * @param {string} suite - Suite name
+ *
+ * @return {Boolean} Test result
+ */
+export const inrange = suite => spec.test(suite)
 
 /* ----------------------------------------------------------------------------
  * Class
@@ -59,9 +74,9 @@ export default class FileSystem {
    *
    * @constructor
    *
-   * @property {String} base_ - Base directory
+   * @property {string} base_ - Base directory
    *
-   * @param {String} base - Base directory
+   * @param {string} base - Base directory
    */
   constructor(base) {
     if (!(fs.existsSync(base) && fs.statSync(base).isDirectory()))
@@ -74,16 +89,16 @@ export default class FileSystem {
   /**
    * Check, whether the given suite exists
    *
-   * @param {String} suite - Suite name
-   * @param {Array<String>} [scope=[]] - Scope for handling multiple agents
+   * @param {string} suite - Suite name
+   * @param {Array<string>} [scope=[]] - Scope for handling multiple agents
    *
    * @return {Boolean} Test result
    */
   valid(suite, scope = []) {
-    if (typeof suite !== "string" || !suite.match(PATTERN))
+    if (typeof suite !== "string" || !inrange(suite))
       throw new TypeError(`Invalid suite name: ${inspect(suite)}`)
     if (!(scope instanceof Array) || scope.find(part =>
-        typeof part !== "string" || !part.match(PATTERN)))
+        typeof part !== "string" || !inrange(part)))
       throw new TypeError(`Invalid scope: ${inspect(scope)}`)
 
     /* Check for existing directory */
@@ -97,17 +112,17 @@ export default class FileSystem {
    * This method assumes that all data that is loaded is encoded in JSON. If
    * the file cannot be loaded with require, an error is thrown.
    *
-   * @param {String} suite - Suite name
-   * @param {Array<String>} [scope=[]] - Scope for handling multiple agents
+   * @param {string} suite - Suite name
+   * @param {Array<string>} [scope=[]] - Scope for handling multiple agents
    *
    * @return {Promise<Object>} Promise resolving with fetched data
    */
   fetch(suite, scope = []) {
     return new Promise((resolve, reject) => {
-      if (typeof suite !== "string" || !suite.match(PATTERN))
+      if (typeof suite !== "string" || !inrange(suite))
         return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
       if (!(scope instanceof Array) || scope.find(part =>
-          typeof part !== "string" || !part.match(PATTERN)))
+          typeof part !== "string" || !inrange(part)))
         return reject(new TypeError(`Invalid scope: ${inspect(scope)}`))
 
       /* Traverse directory */
@@ -164,20 +179,20 @@ export default class FileSystem {
   /**
    * Store specifications and subsuites for a suite
    *
-   * @param {String} suite - Suite name
+   * @param {string} suite - Suite name
    * @param {Object} data - Specifications and nested test suites               // TODO: document/validate data format
-   * @param {Array<String>} [scope=[]] - Scope for handling multiple agents
+   * @param {Array<string>} [scope=[]] - Scope for handling multiple agents
    *
-   * @return {Promise} Promise resolving with no result
+   * @return {Promise<undefined>} Promise resolving with no result
    */
   store(suite, data, scope = []) {
     return new Promise((resolve, reject) => {
-      if (typeof suite !== "string" || !suite.match(PATTERN))
+      if (typeof suite !== "string" || !inrange(suite))
         return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
       if (typeof data !== "object")
         return reject(new TypeError(`Invalid data: ${inspect(data)}`))
       if (!(scope instanceof Array) || scope.find(part =>
-          typeof part !== "string" || !part.match(PATTERN)))
+          typeof part !== "string" || !inrange(part)))
         return reject(new TypeError(`Invalid scope: ${inspect(scope)}`))
       resolve()
     })
@@ -218,7 +233,7 @@ export default class FileSystem {
   /**
    * Retrieve base directory
    *
-   * @return {String} Base directory
+   * @return {string} Base directory
    */
   get base() {
     return this.base_
@@ -232,7 +247,7 @@ export default class FileSystem {
 /**
  * Create a file system storage and ensure that the base directory is present
  *
- * @param {String} base - Base directory
+ * @param {string} base - Base directory
  *
  * @return {Promise<FileSystem>} Promise resolving with file system storage
  */

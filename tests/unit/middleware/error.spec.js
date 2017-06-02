@@ -22,38 +22,31 @@
 
 import httpMocks from "node-mocks-http"
 
-import * as middleware from "~/src/middleware/error"
+import {
+  default as factory
+} from "~/src/middleware/error"
 
 /* ----------------------------------------------------------------------------
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Middleware */
-describe("Middleware", () => {
+/* Middleware.error */
+describe("Middleware.error", () => {
 
-  /* error */
-  describe("error", () => {
-
-    /* Test: should return connect-compatible middleware */
-    it("should return connect-compatible middleware",
-      defaultShouldReturnConnectCompatibleMiddleware
-    )
+  /* Test: should return connect-compatible middleware */
+  it("should return connect-compatible middleware",
+    defaultShouldReturnConnectCompatibleMiddleware
+  )
 
     /* Test: should should set content type */
-    it("should set content type",
-      defaultShouldSetContentType
-    )
+  it("should set content type",
+    defaultShouldSetContentType
+  )
 
-    /* Test: should set HTTP status in payload */
-    it("should set payload",
-      defaultShouldSetPayload
-    )
-
-    // should set message
-
-    // should set HTTP status
-    // default status code
-  })
+  /* Test: should set HTTP status in payload */
+  it("should set payload",
+    defaultShouldSetPayload
+  )
 })
 
 /* ----------------------------------------------------------------------------
@@ -62,7 +55,7 @@ describe("Middleware", () => {
 
 /* Test: .default should return connect-compatible middleware */
 function defaultShouldReturnConnectCompatibleMiddleware() {
-  expect(middleware.default().length)
+  expect(factory().length)
     .toEqual(4)
 }
 
@@ -74,7 +67,7 @@ function defaultShouldSetContentType() {
         next = jasmine.createSpy("next")
 
   /* Create middleware and handle error */
-  const handler = middleware.default()
+  const handler = factory()
   handler(err, req, res, next)
   expect(res._getHeaders())
     .toEqual({ "Content-Type": "application/json" })
@@ -93,7 +86,7 @@ function defaultShouldSetPayload() {
   res.statusCode = 299
 
   /* Create middleware and handle error */
-  const handler = middleware.default()
+  const handler = factory()
   handler(err, req, res, next)
   expect(res._isEndCalled())
     .toBe(true)
