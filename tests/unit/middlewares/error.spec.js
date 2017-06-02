@@ -24,7 +24,7 @@ import httpMocks from "node-mocks-http"
 
 import {
   default as factory
-} from "~/src/middleware/error"
+} from "~/src/middlewares/error"
 
 /* ----------------------------------------------------------------------------
  * Declarations

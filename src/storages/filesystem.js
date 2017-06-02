@@ -24,9 +24,7 @@ import fs from "fs"
 import merge from "deepmerge"
 import mkdirp from "mkdirp-promise"
 import path from "path"
-import {
-  inspect
-} from "util"
+import { inspect } from "util"
 
 /* ----------------------------------------------------------------------------
  * Variables
@@ -90,19 +88,15 @@ export default class FileSystem {
    * Check, whether the given suite exists
    *
    * @param {string} suite - Suite name
-   * @param {Array<string>} [scope=[]] - Scope for handling multiple agents
    *
    * @return {Boolean} Test result
    */
-  valid(suite, scope = []) {
+  valid(suite) {
     if (typeof suite !== "string" || !inrange(suite))
       throw new TypeError(`Invalid suite name: ${inspect(suite)}`)
-    if (!(scope instanceof Array) || scope.find(part =>
-        typeof part !== "string" || !inrange(part)))
-      throw new TypeError(`Invalid scope: ${inspect(scope)}`)
 
     /* Check for existing directory */
-    const directory = path.join(this.base_, ...scope, suite)
+    const directory = path.join(this.base_, suite)
     return fs.existsSync(directory) && fs.statSync(directory).isDirectory()
   }
 
@@ -113,20 +107,16 @@ export default class FileSystem {
    * the file cannot be loaded with require, an error is thrown.
    *
    * @param {string} suite - Suite name
-   * @param {Array<string>} [scope=[]] - Scope for handling multiple agents
    *
    * @return {Promise<Object>} Promise resolving with fetched data
    */
-  fetch(suite, scope = []) {
+  fetch(suite) {
     return new Promise((resolve, reject) => {
       if (typeof suite !== "string" || !inrange(suite))
         return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
-      if (!(scope instanceof Array) || scope.find(part =>
-          typeof part !== "string" || !inrange(part)))
-        return reject(new TypeError(`Invalid scope: ${inspect(scope)}`))
 
       /* Traverse directory */
-      const directory = path.join(this.base_, ...scope, suite)
+      const directory = path.join(this.base_, suite)
       fs.readdir(directory, (readErr, files) => {
         if (readErr)
           return reject(readErr)
@@ -151,7 +141,7 @@ export default class FileSystem {
 
               /* Recurse on nested test suite */
               } else {
-                this.fetch(path.join(suite, name), scope)
+                this.fetch(path.join(suite, name))
 
                   /* Return nested test suites */
                   .then(suites =>
@@ -181,28 +171,24 @@ export default class FileSystem {
    *
    * @param {string} suite - Suite name
    * @param {Object} data - Specifications and nested test suites               // TODO: document/validate data format
-   * @param {Array<string>} [scope=[]] - Scope for handling multiple agents
    *
    * @return {Promise<undefined>} Promise resolving with no result
    */
-  store(suite, data, scope = []) {
+  store(suite, data) {
     return new Promise((resolve, reject) => {
       if (typeof suite !== "string" || !inrange(suite))
         return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
       if (typeof data !== "object")
         return reject(new TypeError(`Invalid data: ${inspect(data)}`))
-      if (!(scope instanceof Array) || scope.find(part =>
-          typeof part !== "string" || !inrange(part)))
-        return reject(new TypeError(`Invalid scope: ${inspect(scope)}`))
       resolve()
     })
 
       /* Ensure directory is present */
-      .then(() => mkdirp(path.join(this.base_, ...scope, suite)))
+      .then(() => mkdirp(path.join(this.base_, suite)))
 
       /* Write files asynchronously */
       .then(() => {
-        const directory = path.join(this.base_, ...scope, suite)
+        const directory = path.join(this.base_, suite)
         return Promise.all([
 
           /* Write specifications */
@@ -224,10 +210,39 @@ export default class FileSystem {
 
           /* Write nested test suites */
           ...Object.keys(data.suites || {}).map(name => {
-            return this.store(path.join(suite, name), data.suites[name], scope)
+            return this.store(path.join(suite, name), data.suites[name])
           })
         ])
       })
+  }
+
+  /**
+   * Create a scoped file system sub storage
+   *
+   * @param {...string} parts - Scope parts
+   *
+   * @return {Promise<FileSystem>} Promise resolving with file system storage
+   */
+  scope(...parts) {
+    if (parts.find(part => typeof part !== "string" || !inrange(part)) ||
+        parts.length === 0)
+      throw new TypeError(`Invalid scope: ${inspect(parts)}`)
+
+    /* Ensure scoped base is present and return sub storage */
+    const base = path.join(this.base_, ...parts)
+    return mkdirp(base)
+      .then(() => new FileSystem(base))
+  }
+
+  *[Symbol.iterator]() {
+    const data = this.data_
+
+    /* Traverse directory */
+    const files = fs.readdirSync(this.base_)
+
+    for (const file of files) {
+      yield file
+    }
   }
 
   /**

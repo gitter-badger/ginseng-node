@@ -37,7 +37,7 @@ rm -rf dist
 "$(yarn bin)"/eslint --max-warnings 0 .
 
 # Transpile sources to ES5
-"$(yarn bin)"/babel src --out-dir dist
+"$(yarn bin)"/babel src --out-dir dist --copy-files
 
 # Start test runner
 "$(yarn bin)"/cross-env NODE_ENV=test \

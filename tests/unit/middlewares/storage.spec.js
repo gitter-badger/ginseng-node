@@ -22,13 +22,14 @@
 
 import httpMocks from "node-mocks-http"
 import useragent from "useragent"
+
 import Router from "router"
 
 import {
   get,
   post,
   default as factory
-} from "~/src/middleware/storage"
+} from "~/src/middlewares/storage"
 
 /* ----------------------------------------------------------------------------
  * Declarations
@@ -101,9 +102,9 @@ describe("Middleware.storage", () => {
       getShouldSetHttpStatusTo200OnSuccess
     )
 
-    /* Test: should set HTTP status to 404 on non-existing directory */
-    it("should set HTTP status to 404 on non-existing directory",
-      getShouldSetHttpStatusTo404OnNonExistingDirectory
+    /* Test: should set HTTP status to 404 on non-existing suite */
+    it("should set HTTP status to 404 on non-existing suite",
+      getShouldSetHttpStatusTo404OnNonExistingSuite
     )
 
     /* Test: should set HTTP status to 500 on internal error */
@@ -217,9 +218,12 @@ function getShouldReturnConnectCompatibleMiddleware() {
 /* Test: .get should set content type on success */
 function getShouldSetContentTypeOnSuccess(done) {
   const storage = {
-    valid: jasmine.createSpy("valid").and.returnValue(true),
-    fetch: jasmine.createSpy("fetch").and.returnValue(
-      Promise.resolve({ data: true }))
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        valid: jasmine.createSpy("valid").and.returnValue(true),
+        fetch: jasmine.createSpy("fetch").and.returnValue(
+          Promise.resolve({ data: true }))
+      }))
   }
 
   /* Mock middleware parameters */
@@ -241,7 +245,10 @@ function getShouldSetContentTypeOnSuccess(done) {
 /* Test: .get should not set content type on error */
 function getShouldNotSetContentTypeOnError(done) {
   const storage = {
-    valid: jasmine.createSpy("valid").and.returnValue(false)
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        valid: jasmine.createSpy("valid").and.returnValue(false)
+      }))
   }
 
   /* Mock middleware parameters */
@@ -263,9 +270,12 @@ function getShouldNotSetContentTypeOnError(done) {
 /* Test: .get should set HTTP status to 200 on success */
 function getShouldSetHttpStatusTo200OnSuccess(done) {
   const storage = {
-    valid: jasmine.createSpy("valid").and.returnValue(true),
-    fetch: jasmine.createSpy("fetch").and.returnValue(
-      Promise.resolve({ data: true }))
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        valid: jasmine.createSpy("valid").and.returnValue(true),
+        fetch: jasmine.createSpy("fetch").and.returnValue(
+          Promise.resolve({ data: true }))
+      }))
   }
 
   /* Mock middleware parameters */
@@ -290,10 +300,13 @@ function getShouldSetHttpStatusTo200OnSuccess(done) {
     .catch(done.fail)
 }
 
-/* Test: .get should set HTTP status to 404 on non-existing directory */
-function getShouldSetHttpStatusTo404OnNonExistingDirectory(done) {
+/* Test: .get should set HTTP status to 404 on non-existing suite */
+function getShouldSetHttpStatusTo404OnNonExistingSuite(done) {
   const storage = {
-    valid: jasmine.createSpy("valid").and.returnValue(false)
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        valid: jasmine.createSpy("valid").and.returnValue(false)
+      }))
   }
 
   /* Mock middleware parameters */
@@ -320,9 +333,12 @@ function getShouldSetHttpStatusTo404OnNonExistingDirectory(done) {
 /* Test: .get should set HTTP status to 500 on internal error */
 function getShouldSetHttpStatusTo500OnInternalError(done) {
   const storage = {
-    valid: jasmine.createSpy("valid").and.returnValue(true),
-    fetch: jasmine.createSpy("fetch").and.returnValue(
-      Promise.reject(new Error("Internal error")))
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        valid: jasmine.createSpy("valid").and.returnValue(true),
+        fetch: jasmine.createSpy("fetch").and.returnValue(
+          Promise.reject(new Error("Internal error")))
+      }))
   }
 
   /* Mock middleware parameters */
@@ -367,7 +383,10 @@ function postShouldReturnConnectCompatibleMiddleware() {
 /* Test: .post should set HTTP status to 200 on success */
 function postShouldSetHttpStatusTo200OnSuccess(done) {
   const storage = {
-    store: jasmine.createSpy("store").and.returnValue(Promise.resolve())
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        store: jasmine.createSpy("store").and.returnValue(Promise.resolve())
+      }))
   }
 
   /* Mock middleware parameters */
@@ -395,8 +414,11 @@ function postShouldSetHttpStatusTo200OnSuccess(done) {
 /* Test: .post should set HTTP status to 500 on internal error */
 function postShouldSetHttpStatusTo500OnInternalError(done) {
   const storage = {
-    store: jasmine.createSpy("store").and.returnValue(
-      Promise.reject(new Error("Internal error")))
+    scope: jasmine.createSpy("scope").and.returnValue(
+      Promise.resolve({
+        store: jasmine.createSpy("store").and.returnValue(
+          Promise.reject(new Error("Internal error")))
+      }))
   }
 
   /* Mock middleware parameters */

@@ -1,0 +1,14 @@
+{
+  "storages": [
+    {
+      "name": "snapshot",
+      "type": "filesystem",
+      "args": ["ginseng"]
+    },
+    {
+      "name": "baseline",
+      "type": "filesystem",
+      "args": ["tests/snapshot"]
+    }
+  ]
+}

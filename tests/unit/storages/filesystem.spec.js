@@ -29,7 +29,7 @@ import {
   factory,
   inrange,
   default as FileSystem
-} from "~/src/storage/filesystem"
+} from "~/src/storages/filesystem"
 
 /* ----------------------------------------------------------------------------
  * Declarations
@@ -82,7 +82,7 @@ describe("Storage.FileSystem", () => {
       fsMock({
         "constructor": {
           "genmaicha": {
-            "oolong.json": "{ data: true }"
+            "oolong.json": ""
           }
         }
       })
@@ -109,8 +109,6 @@ describe("Storage.FileSystem", () => {
 
     /* Register spies and mocks */
     beforeEach(() => {
-      spyOn(path, "join")
-        .and.callThrough()
 
       /* Mock filesystem */
       fsMock({
@@ -138,11 +136,6 @@ describe("Storage.FileSystem", () => {
       validShouldFailOnFile
     )
 
-    /* Test: should respect scope */
-    it("should respect scope",
-      validShouldRespectScope
-    )
-
     /* Test: should throw on empty suite name */
     it("should throw on empty suite name",
       validShouldThrowOnEmptySuiteName
@@ -152,11 +145,6 @@ describe("Storage.FileSystem", () => {
     it("should throw on invalid suite name",
       validShouldThrowOnInvalidSuiteName
     )
-
-    /* Test: should throw on invalid scope */
-    it("should throw on invalid scope",
-      validShouldThrowOnInvalidScope
-    )
   })
 
   /* #fetch */
@@ -164,8 +152,6 @@ describe("Storage.FileSystem", () => {
 
     /* Register spies and mocks */
     beforeEach(() => {
-      spyOn(path, "join")
-        .and.callThrough()
 
       /* Mock filesystem */
       fsMock({
@@ -174,11 +160,6 @@ describe("Storage.FileSystem", () => {
             "oolong.json": "",
             "sencha": {
               "bancha.json": ""
-            }
-          },
-          "scope": {
-            "genmaicha": {
-              "oolong.json": ""
             }
           }
         }
@@ -189,54 +170,49 @@ describe("Storage.FileSystem", () => {
       requireMock("fetch/genmaicha/sencha/bancha.json", { data: true })
     })
 
-    /* Test: should return data */
-    it("should return data",
-      fetchShouldReturnData
+    /* Test: should return promise */
+    it("should return promise",
+      fetchShouldReturnPromise
     )
 
-    /* Test: should return nested data */
-    it("should return nested data",
-      fetchShouldReturnNestedData
+    /* Test: should resolve with data */
+    it("should resolve with data",
+      fetchShouldResolveWithData
     )
 
-    /* Test: should respect scope */
-    it("should respect scope",
-      fetchShouldRespectScope
+    /* Test: should resolve with nested data */
+    it("should resolve with nested data",
+      fetchShouldResolveWithNestedData
     )
 
-    /* Test: should throw on empty suite name */
-    it("should throw on empty suite name",
-      fetchShouldThrowOnEmptySuiteName
+    /* Test: should reject on empty suite name */
+    it("should reject on empty suite name",
+      fetchShouldRejectOnEmptySuiteName
     )
 
-    /* Test: should throw on invalid suite name */
-    it("should throw on invalid suite name",
-      fetchShouldThrowOnInvalidSuiteName
+    /* Test: should reject on invalid suite name */
+    it("should reject on invalid suite name",
+      fetchShouldRejectOnInvalidSuiteName
     )
 
-    /* Test: should throw on invalid scope */
-    it("should throw on invalid scope",
-      fetchShouldThrowOnInvalidScope
+    /* Test: should reject on invalid contents */
+    it("should reject on invalid contents",
+      fetchShouldRejectOnInvalidContents
     )
 
-    /* Test: should throw on invalid contents */
-    it("should throw on invalid contents",
-      fetchShouldThrowOnInvalidContents
+    /* Test: should reject on nested invalid contents */
+    it("should reject on nested invalid contents",
+      fetchShouldRejectOnNestedInvalidContents
     )
 
-    /* Test: should throw on nested invalid contents */
-    it("should throw on nested invalid contents",
-      fetchShouldThrowOnNestedInvalidContents
+    /* Test: should reject on non-existing suite */
+    it("should reject on non-existing suite",
+      fetchShouldRejectOnNonExistingSuite
     )
 
-    /* Test: should throw on non-existing suite */
-    it("should throw on non-existing suite",
-      fetchShouldThrowOnNonExistingSuite
-    )
-
-    /* Test: should throw on failed stat */
-    it("should throw on failed stat",
-      fetchShouldThrowOnFailedStat
+    /* Test: should reject on failed stat */
+    it("should reject on failed stat",
+      fetchShouldRejectOnFailedStat
     )
   })
 
@@ -245,14 +221,17 @@ describe("Storage.FileSystem", () => {
 
     /* Register spies and mocks */
     beforeEach(() => {
-      spyOn(path, "join")
-        .and.callThrough()
 
       /* Mock filesystem */
       fsMock({
         "store": {}
       })
     })
+
+    /* Test: should return promise */
+    it("should return promise",
+      storeShouldReturnPromise
+    )
 
     /* Test: should persist data */
     it("should persist data",
@@ -264,39 +243,73 @@ describe("Storage.FileSystem", () => {
       storeShouldPersistNestedData
     )
 
-    /* Test: should respect scope */
-    it("should respect scope",
-      storeShouldRespectScope
+    /* Test: should persist nested suites */
+    it("should persist nested suites",
+      storeShouldPersistNestedSuites
     )
 
-    /* Test: should throw on empty suite name */
-    it("should throw on empty suite name",
-      storeShouldThrowOnEmptySuiteName
+    /* Test: should reject on empty suite name */
+    it("should reject on empty suite name",
+      storeShouldRejectOnEmptySuiteName
     )
 
-    /* Test: should throw on invalid suite name */
-    it("should throw on invalid suite name",
-      storeShouldThrowOnInvalidSuiteName
+    /* Test: should reject on invalid suite name */
+    it("should reject on invalid suite name",
+      storeShouldRejectOnInvalidSuiteName
     )
 
-    /* Test: should throw on invalid scope */
-    it("should throw on invalid scope",
-      storeShouldThrowOnInvalidScope
+    /* Test: should reject on invalid data */
+    it("should reject on invalid data",
+      storeShouldRejectOnInvalidData
     )
 
-    /* Test: should throw on invalid data */
-    it("should throw on invalid data",
-      storeShouldThrowOnInvalidData
+    /* Test: should reject on invalid contents */
+    it("should reject on invalid contents",
+      storeShouldRejectOnInvalidContents
     )
 
-    /* Test: should throw on invalid contents */
-    it("should throw on invalid contents",
-      storeShouldThrowOnInvalidContents
+    /* Test: should reject on failed write */
+    it("should reject on failed write",
+      storeShouldRejectOnFailedWrite
+    )
+  })
+
+  /* #scope */
+  describe("#scope", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+      spyOn(path, "join")
+        .and.callThrough()
+
+      /* Mock filesystem */
+      fsMock({
+        "scope": {
+          "agent": {
+            "os": {}
+          }
+        }
+      })
+    })
+
+    /* Test: should return promise */
+    it("should return promise",
+      scopeShouldReturnPromise
     )
 
-    /* Test: should throw on failed write */
-    it("should throw on failed write",
-      storeShouldThrowOnFailedWrite
+    /* Test: should return scoped file system */
+    it("should return scoped file system",
+      scopeShouldReturnScopedFileSystem
+    )
+
+    /* Test: should reject on empty parts */
+    it("should reject on empty parts",
+      scopeShouldRejectOnEmptyParts
+    )
+
+    /* Test: should reject on invalid parts */
+    it("should reject on invalid parts",
+      scopeShouldRejectOnInvalidParts
     )
   })
 
@@ -310,6 +323,11 @@ describe("Storage.FileSystem", () => {
       })
     })
 
+    /* Test: should return promise */
+    it("should return promise",
+      factoryShouldReturnPromise
+    )
+
     /* Test: should use existing base directory */
     it("should use existing base directory",
       factoryShouldUseExistingBaseDirectory
@@ -320,9 +338,9 @@ describe("Storage.FileSystem", () => {
       factoryShouldCreateNonExistingBaseDirectory
     )
 
-    /* Test: should throw on constructor error */
-    it("should throw on constructor error",
-      factoryShouldThrowOnConstructorError
+    /* Test: should reject on constructor error */
+    it("should reject on constructor error",
+      factoryShouldRejectOnConstructorError
     )
   })
 })
@@ -414,14 +432,6 @@ function validShouldFailOnFile() {
     .toBe(false)
 }
 
-/* Test: #valid should respect scope */
-function validShouldRespectScope() {
-  const scope = ["agent", "os"]
-  new FileSystem("valid").valid("genmaicha", scope)
-  expect(path.join)
-    .toHaveBeenCalledWith("valid", ...scope, "genmaicha")
-}
-
 /* Test: #valid should throw on empty suite name */
 function validShouldThrowOnEmptySuiteName() {
   expect(() => {
@@ -438,20 +448,22 @@ function validShouldThrowOnInvalidSuiteName() {
     new TypeError("Invalid suite name: null"))
 }
 
-/* Test: #valid should throw on invalid scope */
-function validShouldThrowOnInvalidScope() {
-  expect(() => {
-    new FileSystem("valid").valid("oolong", null)
-  }).toThrow(
-    new TypeError("Invalid scope: null"))
-}
-
 /* ----------------------------------------------------------------------------
  * Definitions: #fetch
  * ------------------------------------------------------------------------- */
 
-/* Test: #fetch should return data */
-function fetchShouldReturnData(done) {
+/* Test: #fetch should return promise */
+function fetchShouldReturnPromise(done) {
+  expect(new FileSystem("fetch").fetch()
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
+
+}
+
+/* Test: #fetch should resolve with data */
+function fetchShouldResolveWithData(done) {
   new FileSystem("fetch").fetch("genmaicha")
     .then(suite => {
       expect(suite)
@@ -472,8 +484,8 @@ function fetchShouldReturnData(done) {
     .catch(done.fail)
 }
 
-/* Test: #fetch should return nested data */
-function fetchShouldReturnNestedData(done) {
+/* Test: #fetch should resolve with nested data */
+function fetchShouldResolveWithNestedData(done) {
   new FileSystem("fetch").fetch("genmaicha/sencha")
     .then(suite => {
       expect(suite)
@@ -487,22 +499,8 @@ function fetchShouldReturnNestedData(done) {
     .catch(done.fail)
 }
 
-/* Test: #fetch should respect scope */
-function fetchShouldRespectScope(done) {
-  const scope = ["agent", "os"]
-  new FileSystem("fetch").fetch("hojicha", scope)
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(jasmine.any(Error))
-      expect(path.join)
-        .toHaveBeenCalledWith("fetch", ...scope, "hojicha")
-      done()
-    })
-}
-
-/* Test: #fetch should throw on empty suite name */
-function fetchShouldThrowOnEmptySuiteName(done) {
+/* Test: #fetch should reject on empty suite name */
+function fetchShouldRejectOnEmptySuiteName(done) {
   new FileSystem("fetch").fetch("")
     .then(done.fail)
     .catch(err => {
@@ -512,8 +510,8 @@ function fetchShouldThrowOnEmptySuiteName(done) {
     })
 }
 
-/* Test: #fetch should throw on invalid suite name */
-function fetchShouldThrowOnInvalidSuiteName(done) {
+/* Test: #fetch should reject on invalid suite name */
+function fetchShouldRejectOnInvalidSuiteName(done) {
   new FileSystem("fetch").fetch(null)
     .then(done.fail)
     .catch(err => {
@@ -523,19 +521,8 @@ function fetchShouldThrowOnInvalidSuiteName(done) {
     })
 }
 
-/* Test: #fetch should throw on invalid scope */
-function fetchShouldThrowOnInvalidScope(done) {
-  new FileSystem("fetch").fetch("matcha", null)
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(new TypeError("Invalid scope: null"))
-      done()
-    })
-}
-
-/* Test: #fetch should throw on invalid contents */
-function fetchShouldThrowOnInvalidContents(done) {
+/* Test: #fetch should reject on invalid contents */
+function fetchShouldRejectOnInvalidContents(done) {
   requireMock("fetch/genmaicha/oolong.json", "")
   new FileSystem("fetch").fetch("genmaicha")
     .then(done.fail)
@@ -547,8 +534,8 @@ function fetchShouldThrowOnInvalidContents(done) {
     })
 }
 
-/* Test: #fetch should throw on nested invalid contents */
-function fetchShouldThrowOnNestedInvalidContents(done) {
+/* Test: #fetch should reject on nested invalid contents */
+function fetchShouldRejectOnNestedInvalidContents(done) {
   requireMock("fetch/genmaicha/sencha/bancha.json", "")
   new FileSystem("fetch").fetch("genmaicha")
     .then(done.fail)
@@ -561,8 +548,8 @@ function fetchShouldThrowOnNestedInvalidContents(done) {
     })
 }
 
-/* Test: #fetch should throw on non-existing suite */
-function fetchShouldThrowOnNonExistingSuite(done) {
+/* Test: #fetch should reject on non-existing suite */
+function fetchShouldRejectOnNonExistingSuite(done) {
   new FileSystem("fetch").fetch("invalid")
     .then(done.fail)
     .catch(err => {
@@ -572,8 +559,8 @@ function fetchShouldThrowOnNonExistingSuite(done) {
     })
 }
 
-/* Test: #fetch should throw on failed stat */
-function fetchShouldThrowOnFailedStat(done) {
+/* Test: #fetch should reject on failed stat */
+function fetchShouldRejectOnFailedStat(done) {
   spyOn(fs, "stat")
     .and.callFake((file, cb) => {
       cb("fail")
@@ -591,24 +578,24 @@ function fetchShouldThrowOnFailedStat(done) {
  * Definitions: #store
  * ------------------------------------------------------------------------- */
 
+/* Test: #store should return promise */
+function storeShouldReturnPromise(done) {
+  expect(new FileSystem("store").store("genmaicha", {})
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
+}
+
 /* Test: #store should persist data */
 function storeShouldPersistData(done) {
   new FileSystem("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
-    },
-    suites: {
-      sencha: {
-        specs: {
-          bancha: { data: true }
-        }
-      }
     }
   })
     .then(() => {
       expect(fs.readFileSync("store/genmaicha/oolong.json", "utf8"))
-        .toEqual("{\"data\":true}")
-      expect(fs.readFileSync("store/genmaicha/sencha/bancha.json", "utf8"))
         .toEqual("{\"data\":true}")
       done()
     })
@@ -630,20 +617,27 @@ function storeShouldPersistNestedData(done) {
     .catch(done.fail)
 }
 
-/* Test: #store should respect scope */
-function storeShouldRespectScope(done) {
-  const scope = ["agent", "os"]
-  new FileSystem("store").store("hojicha", {}, scope)
+/* Test: #store should persist nested suites */
+function storeShouldPersistNestedSuites(done) {
+  new FileSystem("store").store("genmaicha", {
+    suites: {
+      sencha: {
+        specs: {
+          bancha: { data: true }
+        }
+      }
+    }
+  })
     .then(() => {
-      expect(path.join)
-        .toHaveBeenCalledWith("store", ...scope, "hojicha")
+      expect(fs.readFileSync("store/genmaicha/sencha/bancha.json", "utf8"))
+        .toEqual("{\"data\":true}")
       done()
     })
     .catch(done.fail)
 }
 
-/* Test: #store should throw on empty suite name */
-function storeShouldThrowOnEmptySuiteName(done) {
+/* Test: #store should Reject on empty suite name */
+function storeShouldRejectOnEmptySuiteName(done) {
   new FileSystem("store").store("", {})
     .then(done.fail)
     .catch(err => {
@@ -653,8 +647,8 @@ function storeShouldThrowOnEmptySuiteName(done) {
     })
 }
 
-/* Test: #store should throw on invalid suite name */
-function storeShouldThrowOnInvalidSuiteName(done) {
+/* Test: #store should reject on invalid suite name */
+function storeShouldRejectOnInvalidSuiteName(done) {
   new FileSystem("store").store(null, {})
     .then(done.fail)
     .catch(err => {
@@ -664,19 +658,8 @@ function storeShouldThrowOnInvalidSuiteName(done) {
     })
 }
 
-/* Test: #store should throw on invalid scope */
-function storeShouldThrowOnInvalidScope(done) {
-  new FileSystem("store").store("matcha", {}, null)
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(new TypeError("Invalid scope: null"))
-      done()
-    })
-}
-
-/* Test: #store should throw on invalid data */
-function storeShouldThrowOnInvalidData(done) {
+/* Test: #store should reject on invalid data */
+function storeShouldRejectOnInvalidData(done) {
   new FileSystem("store").store("shincha", "invalid")
     .then(done.fail)
     .catch(err => {
@@ -686,8 +669,8 @@ function storeShouldThrowOnInvalidData(done) {
     })
 }
 
-/* Test: #store should throw on invalid contents */
-function storeShouldThrowOnInvalidContents(done) {
+/* Test: #store should reject on invalid contents */
+function storeShouldRejectOnInvalidContents(done) {
   new FileSystem("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
@@ -709,8 +692,8 @@ function storeShouldThrowOnInvalidContents(done) {
     })
 }
 
-/* Test: #fetch should throw on failed write */
-function storeShouldThrowOnFailedWrite(done) {
+/* Test: #fetch should reject on failed write */
+function storeShouldRejectOnFailedWrite(done) {
   spyOn(fs, "writeFile")
     .and.callFake((file, data, cb) => {
       cb("fail")
@@ -729,8 +712,59 @@ function storeShouldThrowOnFailedWrite(done) {
 }
 
 /* ----------------------------------------------------------------------------
+ * Definitions: #scope
+ * ------------------------------------------------------------------------- */
+
+/* Test: #scope should return promise */
+function scopeShouldReturnPromise(done) {
+  expect(new FileSystem("scope").scope("agent", "os")
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
+}
+
+/* Test: #scope should return scoped file system */
+function scopeShouldReturnScopedFileSystem(done) {
+  new FileSystem("scope").scope("agent", "os")
+    .then(storage => {
+      expect(storage.base)
+        .toEqual("scope/agent/os")
+      expect(path.join)
+        .toHaveBeenCalledWith("scope", "agent", "os")
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: #scope should reject on empty parts */
+function scopeShouldRejectOnEmptyParts() {
+  expect(() => {
+    new FileSystem("scope").scope()
+  }).toThrow(
+    new TypeError("Invalid scope: []"))
+}
+
+/* Test: #scope should reject on invalid parts */
+function scopeShouldRejectOnInvalidParts() {
+  expect(() => {
+    new FileSystem("scope").scope("agent", 10)
+  }).toThrow(
+    new TypeError("Invalid scope: [ 'agent', 10 ]"))
+}
+
+/* ----------------------------------------------------------------------------
  * Definitions: .factory
  * ------------------------------------------------------------------------- */
+
+/* Test: .factory should return promise */
+function factoryShouldReturnPromise(done) {
+  expect(factory("factory")
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
+}
 
 /* Test: .factory should use existing base directory */
 function factoryShouldUseExistingBaseDirectory(done) {
@@ -758,8 +792,8 @@ function factoryShouldCreateNonExistingBaseDirectory(done) {
     .catch(done.fail)
 }
 
-/* Test: .factory should throw on constructor error */
-function factoryShouldThrowOnConstructorError(done) {
+/* Test: .factory should reject on constructor error */
+function factoryShouldRejectOnConstructorError(done) {
   factory(null)
     .then(done.fail)
     .catch(err => {

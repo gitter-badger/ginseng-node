@@ -22,9 +22,7 @@
 
 import body from "body-parser"
 import useragent from "useragent"
-import {
-  inspect
-} from "util"
+import { inspect } from "util"
 
 import Router from "router"
 
@@ -49,22 +47,23 @@ export const get = init => {
     const scope = [agent.toAgent(), agent.os.toString()]
 
     /* Wait for storage to be ready */
-    return init.then(storage => {
+    return init.then(base => base.scope(...scope))
+      .then(storage => {
 
-      /* Check if the given directory exists */
-      if (!storage.valid(req.params.path, scope)) {
-        res.statusCode = 404 // Not Found
-        return Promise.reject(new ReferenceError("Invalid path: " +
-          `${inspect(req.params.path)} not found for ${inspect(scope)}`))
-      }
+        /* Check if the given directory exists */
+        if (!storage.valid(req.params.path)) {
+          res.statusCode = 404 // Not Found
+          return Promise.reject(new ReferenceError("Invalid path: " +
+            `${inspect(req.params.path)} not found for ${inspect(scope)}`))
+        }
 
-      /* Fetch data from storage */
-      return storage.fetch(req.params.path, scope).then(data => {
-        res.statusCode = 200 // OK
-        res.setHeader("Content-Type", "application/json")
-        res.end(JSON.stringify(data))
+        /* Fetch data from storage */
+        return storage.fetch(req.params.path, scope).then(data => {
+          res.statusCode = 200 // OK
+          res.setHeader("Content-Type", "application/json")
+          res.end(JSON.stringify(data))
+        })
       })
-    })
 
       /* Forward unhandled errors to error handler */
       .catch(err => {
@@ -92,14 +91,15 @@ export const post = init => {
     const scope = [agent.toAgent(), agent.os.toString()]
 
     /* Wait for storage to be ready */
-    return init.then(storage => {
+    return init.then(base => base.scope(...scope))
+      .then(storage => {
 
-      /* Store data in storage */
-      return storage.store(req.params.path, scope, req.body).then(() => {
-        res.statusCode = 201 // Created
-        res.end()
+        /* Store data in storage */
+        return storage.store(req.params.path, scope, req.body).then(() => {
+          res.statusCode = 201 // Created
+          res.end()
+        })
       })
-    })
 
       /* Forward unhandled errors to error handler */
       .catch(err => {

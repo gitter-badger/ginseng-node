@@ -33,6 +33,7 @@
   "dependencies": {
     "body-parser": "^1.17.1",
     "deepmerge": "^1.3.2",
+    "jsonschema": "^1.1.1",
     "mkdirp-promise": "^5.0.1",
     "router": "^1.3.0",
     "useragent": "^2.1.13"
