@@ -22,6 +22,7 @@
 
 import fs from "fs"
 import fsMock from "mock-fs"
+import json from "jsonfile"
 import path from "path"
 
 import {
@@ -232,7 +233,8 @@ describe("Storage.FileSystem", () => {
           "genmaicha": {
             "oolong.json": "{ \"data\": true }",
             "sencha": {
-              "bancha.json": "{ \"data\": true }"
+              "bancha.json": "{ \"data\": true }",
+              "invalid": "ignored-anyway"
             }
           },
           "matcha": {
@@ -247,6 +249,11 @@ describe("Storage.FileSystem", () => {
       fetchAllShouldReturnPromise
     )
 
+    /* Test: should ignore files */
+    it("should ignore files",
+      fetchAllShouldIgnoreFiles
+    )
+
     /* Test: should resolve with data */
     it("should resolve with data",
       fetchAllShouldResolveWithData
@@ -255,11 +262,6 @@ describe("Storage.FileSystem", () => {
     /* Test: should reject on failed stat */
     it("should reject on failed stat",
       fetchAllShouldRejectOnFailedStat
-    )
-
-    /* Test: should reject on file */
-    it("should reject on file",
-      fetchAllShouldRejectOnFile
     )
   })
 
@@ -315,9 +317,32 @@ describe("Storage.FileSystem", () => {
       storeShouldRejectOnInvalidContents
     )
 
+    /* Test: should reject on invalid nested contents */
+    it("should reject on invalid nested contents",
+      storeShouldRejectOnInvalidNestedContents
+    )
+
     /* Test: should reject on failed write */
     it("should reject on failed write",
       storeShouldRejectOnFailedWrite
+    )
+  })
+
+  /* #storeAll */
+  describe("#storeAll", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+
+      /* Mock filesystem */
+      fsMock({
+        "storeAll": {}
+      })
+    })
+
+    /* Test: should return promise */
+    it("should return promise",
+      storeAllShouldReturnPromise
     )
   })
 
@@ -633,6 +658,33 @@ function fetchAllShouldReturnPromise(done) {
     .toEqual(jasmine.any(Promise))
 }
 
+/* Test: #fetchAll should ignore files */
+function fetchAllShouldIgnoreFiles(done) {
+  fsMock({
+    "fetchAll": {
+      "genmaicha": {
+        "oolong.json": "{ \"data\": true }"
+      },
+      "invalid": "ignored-anyway"
+    }
+  })
+  new FileSystem("fetchAll").fetchAll()
+    .then(suite => {
+      expect(suite)
+        .toEqual({
+          suites: {
+            genmaicha: {
+              specs: {
+                oolong: { data: true }
+              }
+            }
+          }
+        })
+      done()
+    })
+    .catch(done.fail)
+}
+
 /* Test: #fetchAll should resolve with data */
 function fetchAllShouldResolveWithData(done) {
   new FileSystem("fetchAll").fetchAll()
@@ -679,22 +731,6 @@ function fetchAllShouldRejectOnFailedStat(done) {
     })
 }
 
-/* Test: #fetchAll should reject on file */
-function fetchAllShouldRejectOnFile(done) {
-  fsMock({
-    "fetchAll": {
-      "invalid.json": ""
-    }
-  })
-  new FileSystem("fetchAll").fetchAll()
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(new TypeError("Invalid directory: 'invalid.json'"))
-      done()
-    })
-}
-
 /* ----------------------------------------------------------------------------
  * Definitions: #store
  * ------------------------------------------------------------------------- */
@@ -717,7 +753,7 @@ function storeShouldPersistData(done) {
   })
     .then(() => {
       expect(fs.readFileSync("store/genmaicha/oolong.json", "utf8"))
-        .toEqual("{\"data\":true}")
+        .toEqual("{\n  \"data\": true\n}\n")
       done()
     })
     .catch(done.fail)
@@ -732,7 +768,7 @@ function storeShouldPersistNestedData(done) {
   })
     .then(() => {
       expect(fs.readFileSync("store/genmaicha/sencha/bancha.json", "utf8"))
-        .toEqual("{\"data\":true}")
+        .toEqual("{\n  \"data\": true\n}\n")
       done()
     })
     .catch(done.fail)
@@ -751,7 +787,7 @@ function storeShouldPersistNestedSuites(done) {
   })
     .then(() => {
       expect(fs.readFileSync("store/genmaicha/sencha/bancha.json", "utf8"))
-        .toEqual("{\"data\":true}")
+        .toEqual("{\n  \"data\": true\n}\n")
       done()
     })
     .catch(done.fail)
@@ -813,10 +849,29 @@ function storeShouldRejectOnInvalidContents(done) {
     })
 }
 
+/* Test: #store should reject on invalid nested contents */
+function storeShouldRejectOnInvalidNestedContents(done) {
+  new FileSystem("store").store("genmaicha", {
+    specs: {
+      oolong: { data: true }
+    },
+    suites: {
+      sencha: "invalid"
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(
+        new TypeError("Invalid contents: 'invalid'"))
+      done()
+    })
+}
+
 /* Test: #fetch should reject on failed write */
 function storeShouldRejectOnFailedWrite(done) {
-  spyOn(fs, "writeFile")
-    .and.callFake((file, data, cb) => {
+  spyOn(json, "writeFile")
+    .and.callFake((file, data, options, cb) => {
       cb("fail")
     })
   new FileSystem("store").store("genmaicha", {
@@ -830,6 +885,19 @@ function storeShouldRejectOnFailedWrite(done) {
         .toEqual("fail")
       done()
     })
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: #storeAll
+ * ------------------------------------------------------------------------- */
+
+/* Test: #storeAll should return promise */
+function storeAllShouldReturnPromise(done) {
+  expect(new FileSystem("storeAll").storeAll({})
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
 }
 
 /* ----------------------------------------------------------------------------

@@ -175,59 +175,19 @@ export default class FileSystem {
   }
 
   /**
-   * Fetch all test suites
+   * Export all suites
    *
-   * @return {[type]} [description]
+   * @return {Promise<Object>} Promise resolving with fetched data
    */
   fetchAll() {
-    return new Promise((resolve, reject) => {
-
-      /* Traverse directory */
-      fs.readdir(this.base_, (readErr, files) => {
-        /* istanbul ignore if - should never happen and cannot be triggered */
-        if (readErr)
-          return reject(readErr)
-
-        /* Load suites asynchronously */
-        Promise.all(files.map(file => {
-          return new Promise((resolveFile, rejectFile) => {
-            fs.stat(path.join(this.base_, file), (statErr, stats) => {
-              if (statErr)
-                return rejectFile(statErr)
-
-              /* Fail on non-directories */
-              if (!stats.isDirectory())
-                return rejectFile(
-                  new TypeError(`Invalid directory: ${inspect(file)}`))
-
-              /* On error, resolve in non-strict case, otherwise reject */
-              this.fetch(file)
-
-                /* Return nested suites */
-                .then(suites =>
-                  resolveFile({ suites: { [file]: suites } }))
-
-                /* Propagate error */
-                .catch(rejectFile)
-            })
-          })
-        }))
-
-          /* Merge nested suites and specifications */
-          .then(data =>
-            resolve(merge.all([...data, {}])))
-
-          /* Propagate error */
-          .catch(reject)
-      })
-    })
+    return this.fetch(".")
   }
 
   /**
    * Store specifications and nested suites for a suite
    *
    * @param {string} suite - Suite name
-   * @param {Object} data - Specifications and nested suites                    // TODO: document/validate data format
+   * @param {Object} data - Specifications and nested suites
    *
    * @return {Promise<undefined>} Promise resolving with no result
    */
@@ -257,16 +217,21 @@ export default class FileSystem {
 
               /* Serialize data and write to file */
               const file = path.join(directory, `${name}.json`)
-              fs.writeFile(file, JSON.stringify(data.specs[name]), writeErr => {
-                if (writeErr)
-                  return rejectSpec(writeErr)
-                resolveSpec()
+              json.writeFile(file, data.specs[name], { spaces: 2 }, err => {
+                return err
+                  ? rejectSpec(err)
+                  : resolveSpec()
               })
             })
           }),
 
           /* Write nested suites */
           ...Object.keys(data.suites || {}).map(name => {
+            if (typeof data.suites[name] !== "object")
+              return Promise.reject(new TypeError(
+                `Invalid contents: ${inspect(data.suites[name])}`))
+
+            /* Recurse on nested suite */
             return this.store(path.join(suite, name), data.suites[name])
           })
         ])
@@ -274,19 +239,30 @@ export default class FileSystem {
   }
 
   /**
+   * Import suites
+   *
+   * @param {Object} data - Specifications and nested suites
+   *
+   * @return {Promise<undefined>} Promise resolving with no result
+   */
+  storeAll(data) {
+    return this.store(".", data)
+  }
+
+  /**
    * Create a scoped file system sub storage
    *
-   * @param {...string} parts - Scope parts
+   * @param {...string} suites - Suite names
    *
    * @return {Promise<FileSystem>} Promise resolving with file system storage
    */
-  scope(...parts) {
-    if (parts.find(part => typeof part !== "string" || !inrange(part)) ||
-        parts.length === 0)
-      throw new TypeError(`Invalid scope: ${inspect(parts)}`)
+  scope(...suites) {
+    if (suites.find(suite => typeof suite !== "string" || !inrange(suite)) ||
+        suites.length === 0)
+      throw new TypeError(`Invalid scope: ${inspect(suites)}`)
 
     /* Ensure scoped base is present and return sub storage */
-    const base = path.join(this.base_, ...parts)
+    const base = path.join(this.base_, ...suites)
     return mkdirp(base)
       .then(() => new FileSystem(base))
   }

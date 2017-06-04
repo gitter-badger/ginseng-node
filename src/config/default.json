@@ -1,14 +1,18 @@
 {
-  "storages": [
+  "stages": [
     {
       "name": "snapshot",
-      "type": "filesystem",
-      "args": ["ginseng"]
+      "storage": {
+        "type": "filesystem",
+        "args": ["ginseng"]
+      }
     },
     {
       "name": "baseline",
-      "type": "filesystem",
-      "args": ["tests/snapshot"]
+      "storage": {
+        "type": "filesystem",
+        "args": ["tests/snapshot"]
+      }
     }
   ]
 }

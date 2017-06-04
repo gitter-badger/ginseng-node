@@ -1,37 +1,45 @@
 {
   "type": "object",
   "properties": {
-    "storages": {
+    "stages": {
       "description": "Storages to use",
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "name": {
-            "description": "Name (and mount point) of storage",
+            "description": "Name of stage",
             "type": "string"
           },
-          "type": {
-            "description": "Type of storage",
-            "type": "string"
-          },
-          "args": {
-            "description": "Arguments to be passed to constructor",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "storage": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "description": "Type of storage",
+                "type": "string"
+              },
+              "args": {
+                "description": "Arguments to be passed to storage",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required" : [
+              "type",
+              "args"
+            ]
           }
         },
         "required" : [
           "name",
-          "type",
-          "args"
+          "storage"
         ]
       }
     }
   },
   "required" : [
-    "storages"
+    "stages"
   ]
 }
