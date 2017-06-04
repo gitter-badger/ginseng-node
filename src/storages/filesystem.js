@@ -32,7 +32,7 @@ import { inspect } from "util"
  * ------------------------------------------------------------------------- */
 
 /**
- * Name specification for test suites and specifications
+ * Character range for valid suite names
  *
  * This test is necessary, as the file system storage takes the path/name of
  * the suite, splits it at slashes and writes the specifications and nested
@@ -41,7 +41,7 @@ import { inspect } from "util"
  *
  * @type {RegExp} Regular expression matching valid file names
  */
-const spec = new RegExp(
+const FILE_SYSTEM_CHARACTER_RANGE = new RegExp(
   "^" +
     "[ !#$%&'()+,.0-9;=@A-Z\\[\\]^_a-z{}~-]+" +
     "(\/" +
@@ -54,13 +54,13 @@ const spec = new RegExp(
  * ------------------------------------------------------------------------- */
 
 /**
- * Validate suite name character range
+ * Check suite name character range
  *
  * @param {string} suite - Suite name
  *
  * @return {Boolean} Test result
  */
-export const inrange = suite => spec.test(suite)
+export const inrange = suite => FILE_SYSTEM_CHARACTER_RANGE.test(suite)
 
 /* ----------------------------------------------------------------------------
  * Class
@@ -71,28 +71,22 @@ export default class FileSystem {
   /**
    * Create a file system storage
    *
+   * The file system storage provides an easy way to fetch and store test data
+   * for different clients which are implemented with scopes. Correct scoping
+   * during access is the duty of the caller, so the implied standards must
+   * always be followed, or the file system storage may return garbage.
+   *
    * @constructor
    *
    * @property {string} base_ - Base directory
    *
    * @param {string} base - Base directory
    */
-  constructor(base, options = {}) {
-    if (typeof base !== "string" || !base.length)
+  constructor(base) {
+    if (typeof base !== "string" || !inrange(base))
       throw new TypeError(`Invalid base: ${inspect(base)}`)
-    if (typeof options !== "object")
-      throw new TypeError(`Invalid options: ${inspect(options)}`)
-    if (options.strict && typeof options.strict !== "boolean")
-      throw new TypeError(
-        `Invalid strict option: ${inspect(options.strict)}`)
 
-    /* Merge options with defaults */
-    this.options_ = {
-      ...{ strict: true },
-      ...options
-    }
-
-    /* Check base directory exists */
+    /* Check for base directory */
     if (!(fs.existsSync(base) && fs.statSync(base).isDirectory()))
       throw new Error(`Invalid base: ${inspect(base)}`)
 
@@ -146,20 +140,16 @@ export default class FileSystem {
               if (stats.isFile()) {
                 const spec = path.basename(name, path.extname(name))
                 json.readFile(file, (err, data) => {
-                  if (err)
-                    return this.options_.strict
-                      ? rejectFile(err)
-                      : resolveFile(null)
-
-                  /* JSON was loaded successfully */
-                  resolveFile({ specs: { [spec]: data } })
+                  return err
+                    ? rejectFile(err)
+                    : resolveFile({ specs: { [spec]: data } })
                 })
 
-              /* Recurse on nested test suite */
+              /* Recurse on nested suite */
               } else {
                 this.fetch(path.join(suite, name))
 
-                  /* Return nested test suites */
+                  /* Return nested suites */
                   .then(suites =>
                     resolveFile({ suites: { [name]: suites } }))
 
@@ -170,11 +160,9 @@ export default class FileSystem {
           })
         }))
 
-          /* Merge nested test suites and specifications - two empty objects
-             are appended, because in non-strict mode the filtered array can
-             be empty and merge.all demands at least two input elements */
+          /* Merge nested suites and specifications */
           .then(data =>
-            resolve(merge.all([...data.filter(Boolean), {}, {}])))
+            resolve(merge.all([...data, {}])))
 
           /* Propagate error */
           .catch(reject)
@@ -183,7 +171,8 @@ export default class FileSystem {
   }
 
   /**
-   * [fetchAll description]
+   * Fetch all test suites
+   *
    * @return {[type]} [description]
    */
   fetchAll() {
@@ -191,6 +180,7 @@ export default class FileSystem {
 
       /* Traverse directory */
       fs.readdir(this.base_, (readErr, files) => {
+        /* istanbul ignore if - should never happen and cannot be triggered */
         if (readErr)
           return reject(readErr)
 
@@ -201,27 +191,27 @@ export default class FileSystem {
               if (statErr)
                 return rejectFile(statErr)
 
-              /* Filter non-directories */
+              /* Fail on non-directories */
               if (!stats.isDirectory())
-                return this.options_.strict
-                  ? rejectFile(
-                      new TypeError(`Invalid contents: ${inspect(file)}`))
-                  : resolveFile(null)
+                return rejectFile(
+                  new TypeError(`Invalid directory: ${inspect(file)}`))
 
               /* On error, resolve in non-strict case, otherwise reject */
               this.fetch(file)
-                .then(resolveFile)
-                .catch(err =>
-                  this.options_.strict
-                    ? rejectFile(err)
-                    : resolveFile(null))
+
+                /* Return nested suites */
+                .then(suites =>
+                  resolveFile({ suites: { [file]: suites } }))
+
+                /* Propagate error */
+                .catch(rejectFile)
             })
           })
         }))
 
-          /* Filter load errors */
+          /* Merge nested suites and specifications */
           .then(data =>
-            resolve(data.filter(Boolean)))
+            resolve(merge.all([...data, {}])))
 
           /* Propagate error */
           .catch(reject)
@@ -230,10 +220,10 @@ export default class FileSystem {
   }
 
   /**
-   * Store specifications and subsuites for a suite
+   * Store specifications and nested suites for a suite
    *
    * @param {string} suite - Suite name
-   * @param {Object} data - Specifications and nested test suites               // TODO: document/validate data format
+   * @param {Object} data - Specifications and nested suites                    // TODO: document/validate data format
    *
    * @return {Promise<undefined>} Promise resolving with no result
    */
@@ -271,7 +261,7 @@ export default class FileSystem {
             })
           }),
 
-          /* Write nested test suites */
+          /* Write nested suites */
           ...Object.keys(data.suites || {}).map(name => {
             return this.store(path.join(suite, name), data.suites[name])
           })

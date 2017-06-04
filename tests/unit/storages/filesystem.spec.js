@@ -92,6 +92,16 @@ describe("Storage.FileSystem", () => {
       constructorShouldSetBaseDirectory
     )
 
+    /* Test: should throw on empty base directory */
+    it("should throw on empty base directory",
+      constructorShouldThrowOnEmptyBaseDirectory
+    )
+
+    /* Test: should throw on invalid base directory */
+    it("should throw on invalid base directory",
+      constructorShouldThrowOnInvalidBaseDirectory
+    )
+
     /* Test: should throw on non-existing base directory */
     it("should throw on non-existing base directory",
       constructorShouldThrowOnNonExistingBaseDirectory
@@ -162,7 +172,7 @@ describe("Storage.FileSystem", () => {
             }
           },
           "matcha": {
-            "hojicha": "invalid"
+            "hojicha.json": "invalid"
           }
         }
       })
@@ -181,11 +191,6 @@ describe("Storage.FileSystem", () => {
     /* Test: should resolve with nested data */
     it("should resolve with nested data",
       fetchShouldResolveWithNestedData
-    )
-
-    /* Test: should resolve on invalid contents in non-strict mode */
-    it("should resolve on invalid contents in non-strict mode",
-      fetchShouldResolveOnInvalidContentsInNonStrictMode
     )
 
     /* Test: should reject on empty suite name */
@@ -211,6 +216,49 @@ describe("Storage.FileSystem", () => {
     /* Test: should reject on failed stat */
     it("should reject on failed stat",
       fetchShouldRejectOnFailedStat
+    )
+  })
+
+  /* #fetchAll */
+  describe("#fetchAll", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+
+      /* Mock filesystem */
+      fsMock({
+        "fetchAll": {
+          "genmaicha": {
+            "oolong.json": "{ \"data\": true }",
+            "sencha": {
+              "bancha.json": "{ \"data\": true }"
+            }
+          },
+          "matcha": {
+            "hojicha.json": "{ \"data\": true }"
+          }
+        }
+      })
+    })
+
+    /* Test: should return promise */
+    it("should return promise",
+      fetchAllShouldReturnPromise
+    )
+
+    /* Test: should resolve with data */
+    it("should resolve with data",
+      fetchAllShouldResolveWithData
+    )
+
+    /* Test: should reject on failed stat */
+    it("should reject on failed stat",
+      fetchAllShouldRejectOnFailedStat
+    )
+
+    /* Test: should reject on file */
+    it("should reject on file",
+      fetchAllShouldRejectOnFile
     )
   })
 
@@ -390,6 +438,22 @@ function constructorShouldSetBaseDirectory() {
     .toEqual(directory)
 }
 
+/* Test: #constructor should throw on empty base directory */
+function constructorShouldThrowOnEmptyBaseDirectory() {
+  expect(() => {
+    new FileSystem("")
+  }).toThrow(
+    new TypeError("Invalid base: ''"))
+}
+
+/* Test: #constructor should throw on invalid base directory */
+function constructorShouldThrowOnInvalidBaseDirectory() {
+  expect(() => {
+    new FileSystem(null)
+  }).toThrow(
+    new TypeError("Invalid base: null"))
+}
+
 /* Test: #constructor should throw on non-existing base directory */
 function constructorShouldThrowOnNonExistingBaseDirectory() {
   const directory = "constructor/invalid"
@@ -457,7 +521,6 @@ function fetchShouldReturnPromise(done) {
     .catch(done)
   )
     .toEqual(jasmine.any(Promise))
-
 }
 
 /* Test: #fetch should resolve with data */
@@ -492,16 +555,6 @@ function fetchShouldResolveWithNestedData(done) {
             bancha: { data: true }
           }
         })
-      done()
-    })
-    .catch(done.fail)
-}
-
-/* Test: #fetch should resolve on invalid contents in non-strict mode */
-function fetchShouldResolveOnInvalidContentsInNonStrictMode(done) {
-  new FileSystem("fetch", { strict: false }).fetch("matcha")
-    .then(suite => {
-      console.log(suite)
       done()
     })
     .catch(done.fail)
@@ -562,6 +615,81 @@ function fetchShouldRejectOnFailedStat(done) {
     .catch(err => {
       expect(err)
         .toEqual("fail")
+      done()
+    })
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: #fetchAll
+ * ------------------------------------------------------------------------- */
+
+/* Test: #fetchAll should return promise */
+function fetchAllShouldReturnPromise(done) {
+  expect(new FileSystem("fetchAll").fetchAll()
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
+}
+
+/* Test: #fetchAll should resolve with data */
+function fetchAllShouldResolveWithData(done) {
+  new FileSystem("fetchAll").fetchAll()
+    .then(suite => {
+      expect(suite)
+        .toEqual({
+          suites: {
+            genmaicha: {
+              specs: {
+                oolong: { data: true }
+              },
+              suites: {
+                sencha: {
+                  specs: {
+                    bancha: { data: true }
+                  }
+                }
+              }
+            },
+            matcha: {
+              specs: {
+                hojicha: { data: true }
+              }
+            }
+          }
+        })
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: #fetchAll should reject on failed stat */
+function fetchAllShouldRejectOnFailedStat(done) {
+  spyOn(fs, "stat")
+    .and.callFake((file, cb) => {
+      cb("fail")
+    })
+  new FileSystem("fetchAll").fetchAll()
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual("fail")
+      done()
+    })
+}
+
+/* Test: #fetchAll should reject on file */
+function fetchAllShouldRejectOnFile(done) {
+  fsMock({
+    "fetchAll": {
+      "invalid.json": ""
+    }
+  })
+  new FileSystem("fetchAll").fetchAll()
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid directory: 'invalid.json'"))
       done()
     })
 }
