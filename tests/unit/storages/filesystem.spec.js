@@ -871,6 +871,7 @@ function storeShouldRejectOnInvalidNestedContents(done) {
 /* Test: #fetch should reject on failed write */
 function storeShouldRejectOnFailedWrite(done) {
   spyOn(json, "writeFile")
+    // eslint-disable-next-line max-params
     .and.callFake((file, data, options, cb) => {
       cb("fail")
     })
