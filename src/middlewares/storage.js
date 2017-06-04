@@ -68,7 +68,7 @@ export const get = init => {
       /* Forward unhandled errors to error handler */
       .catch(err => {
         if (res.statusCode >= 200 && res.statusCode <= 299)
-          res.statusCode = 500
+          res.statusCode = 500 // Internal Server Error
         next(err)
       })
   }

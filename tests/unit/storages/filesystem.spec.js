@@ -168,7 +168,8 @@ describe("Storage.FileSystem", () => {
           "genmaicha": {
             "oolong.json": "{ \"data\": true }",
             "sencha": {
-              "bancha.json": "{ \"data\": true }"
+              "bancha.json": "{ \"data\": true }",
+              "invalid": "ignored-anyway"
             }
           },
           "matcha": {

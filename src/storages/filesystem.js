@@ -138,6 +138,10 @@ export default class FileSystem {
 
               /* Load specifications from file */
               if (stats.isFile()) {
+                if (path.extname(name) !== ".json")
+                  return resolveFile({})
+
+                /* Load contents */
                 const spec = path.basename(name, path.extname(name))
                 json.readFile(file, (err, data) => {
                   return err
