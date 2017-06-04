@@ -21,6 +21,7 @@
  */
 
 import fs from "fs"
+import json from "jsonfile"
 import merge from "deepmerge"
 import mkdirp from "mkdirp-promise"
 import path from "path"
@@ -76,7 +77,22 @@ export default class FileSystem {
    *
    * @param {string} base - Base directory
    */
-  constructor(base) {
+  constructor(base, options = {}) {
+    if (typeof base !== "string" || !base.length)
+      throw new TypeError(`Invalid base: ${inspect(base)}`)
+    if (typeof options !== "object")
+      throw new TypeError(`Invalid options: ${inspect(options)}`)
+    if (options.strict && typeof options.strict !== "boolean")
+      throw new TypeError(
+        `Invalid strict option: ${inspect(options.strict)}`)
+
+    /* Merge options with defaults */
+    this.options_ = {
+      ...{ strict: true },
+      ...options
+    }
+
+    /* Check base directory exists */
     if (!(fs.existsSync(base) && fs.statSync(base).isDirectory()))
       throw new Error(`Invalid base: ${inspect(base)}`)
 
@@ -103,9 +119,6 @@ export default class FileSystem {
   /**
    * Fetch suites and specifications from a directory and all subdirectories
    *
-   * This method assumes that all data that is loaded is encoded in JSON. If
-   * the file cannot be loaded with require, an error is thrown.
-   *
    * @param {string} suite - Suite name
    *
    * @return {Promise<Object>} Promise resolving with fetched data
@@ -122,7 +135,7 @@ export default class FileSystem {
           return reject(readErr)
 
         /* Load files asynchronously and recurse */
-        return Promise.all(files.map(name => {
+        Promise.all(files.map(name => {
           return new Promise((resolveFile, rejectFile) => {
             const file = path.join(directory, name)
             fs.stat(file, (statErr, stats) => {
@@ -132,12 +145,15 @@ export default class FileSystem {
               /* Load specifications from file */
               if (stats.isFile()) {
                 const spec = path.basename(name, path.extname(name))
-                try {
-                  return resolveFile({ specs: { [spec]: require(file) } })
-                } catch (_) {
-                  return rejectFile(
-                    new TypeError(`Invalid contents: ${inspect(file)}`))
-                }
+                json.readFile(file, (err, data) => {
+                  if (err)
+                    return this.options_.strict
+                      ? rejectFile(err)
+                      : resolveFile(null)
+
+                  /* JSON was loaded successfully */
+                  resolveFile({ specs: { [spec]: data } })
+                })
 
               /* Recurse on nested test suite */
               } else {
@@ -148,20 +164,67 @@ export default class FileSystem {
                     resolveFile({ suites: { [name]: suites } }))
 
                   /* Propagate error */
-                  .catch(fetchErr =>
-                    rejectFile(fetchErr))
+                  .catch(rejectFile)
               }
             })
           })
         }))
 
-          /* Merge nested test suites and specifications */
+          /* Merge nested test suites and specifications - two empty objects
+             are appended, because in non-strict mode the filtered array can
+             be empty and merge.all demands at least two input elements */
           .then(data =>
-            resolve(merge.all([...data, {}])))
+            resolve(merge.all([...data.filter(Boolean), {}, {}])))
 
           /* Propagate error */
-          .catch(allErr =>
-            reject(allErr))
+          .catch(reject)
+      })
+    })
+  }
+
+  /**
+   * [fetchAll description]
+   * @return {[type]} [description]
+   */
+  fetchAll() {
+    return new Promise((resolve, reject) => {
+
+      /* Traverse directory */
+      fs.readdir(this.base_, (readErr, files) => {
+        if (readErr)
+          return reject(readErr)
+
+        /* Load suites asynchronously */
+        Promise.all(files.map(file => {
+          return new Promise((resolveFile, rejectFile) => {
+            fs.stat(path.join(this.base_, file), (statErr, stats) => {
+              if (statErr)
+                return rejectFile(statErr)
+
+              /* Filter non-directories */
+              if (!stats.isDirectory())
+                return this.options_.strict
+                  ? rejectFile(
+                      new TypeError(`Invalid contents: ${inspect(file)}`))
+                  : resolveFile(null)
+
+              /* On error, resolve in non-strict case, otherwise reject */
+              this.fetch(file)
+                .then(resolveFile)
+                .catch(err =>
+                  this.options_.strict
+                    ? rejectFile(err)
+                    : resolveFile(null))
+            })
+          })
+        }))
+
+          /* Filter load errors */
+          .then(data =>
+            resolve(data.filter(Boolean)))
+
+          /* Propagate error */
+          .catch(reject)
       })
     })
   }
@@ -232,17 +295,6 @@ export default class FileSystem {
     const base = path.join(this.base_, ...parts)
     return mkdirp(base)
       .then(() => new FileSystem(base))
-  }
-
-  *[Symbol.iterator]() {
-    const data = this.data_
-
-    /* Traverse directory */
-    const files = fs.readdirSync(this.base_)
-
-    for (const file of files) {
-      yield file
-    }
   }
 
   /**

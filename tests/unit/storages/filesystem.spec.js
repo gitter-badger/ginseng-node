@@ -23,7 +23,6 @@
 import fs from "fs"
 import fsMock from "mock-fs"
 import path from "path"
-import requireMock from "mock-require"
 
 import {
   factory,
@@ -157,17 +156,16 @@ describe("Storage.FileSystem", () => {
       fsMock({
         "fetch": {
           "genmaicha": {
-            "oolong.json": "",
+            "oolong.json": "{ \"data\": true }",
             "sencha": {
-              "bancha.json": ""
+              "bancha.json": "{ \"data\": true }"
             }
+          },
+          "matcha": {
+            "hojicha": "invalid"
           }
         }
       })
-
-      /* Mock required files */
-      requireMock("fetch/genmaicha/oolong.json", { data: true })
-      requireMock("fetch/genmaicha/sencha/bancha.json", { data: true })
     })
 
     /* Test: should return promise */
@@ -185,6 +183,11 @@ describe("Storage.FileSystem", () => {
       fetchShouldResolveWithNestedData
     )
 
+    /* Test: should resolve on invalid contents in non-strict mode */
+    it("should resolve on invalid contents in non-strict mode",
+      fetchShouldResolveOnInvalidContentsInNonStrictMode
+    )
+
     /* Test: should reject on empty suite name */
     it("should reject on empty suite name",
       fetchShouldRejectOnEmptySuiteName
@@ -198,11 +201,6 @@ describe("Storage.FileSystem", () => {
     /* Test: should reject on invalid contents */
     it("should reject on invalid contents",
       fetchShouldRejectOnInvalidContents
-    )
-
-    /* Test: should reject on nested invalid contents */
-    it("should reject on nested invalid contents",
-      fetchShouldRejectOnNestedInvalidContents
     )
 
     /* Test: should reject on non-existing suite */
@@ -499,6 +497,16 @@ function fetchShouldResolveWithNestedData(done) {
     .catch(done.fail)
 }
 
+/* Test: #fetch should resolve on invalid contents in non-strict mode */
+function fetchShouldResolveOnInvalidContentsInNonStrictMode(done) {
+  new FileSystem("fetch", { strict: false }).fetch("matcha")
+    .then(suite => {
+      console.log(suite)
+      done()
+    })
+    .catch(done.fail)
+}
+
 /* Test: #fetch should reject on empty suite name */
 function fetchShouldRejectOnEmptySuiteName(done) {
   new FileSystem("fetch").fetch("")
@@ -523,27 +531,11 @@ function fetchShouldRejectOnInvalidSuiteName(done) {
 
 /* Test: #fetch should reject on invalid contents */
 function fetchShouldRejectOnInvalidContents(done) {
-  requireMock("fetch/genmaicha/oolong.json", "")
-  new FileSystem("fetch").fetch("genmaicha")
+  new FileSystem("fetch").fetch("matcha")
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(
-          new TypeError("Invalid contents: 'fetch/genmaicha/oolong.json'"))
-      done()
-    })
-}
-
-/* Test: #fetch should reject on nested invalid contents */
-function fetchShouldRejectOnNestedInvalidContents(done) {
-  requireMock("fetch/genmaicha/sencha/bancha.json", "")
-  new FileSystem("fetch").fetch("genmaicha")
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(
-          new TypeError(
-            "Invalid contents: 'fetch/genmaicha/sencha/bancha.json'"))
+        .toEqual(jasmine.any(Error))
       done()
     })
 }
