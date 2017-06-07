@@ -87,6 +87,16 @@ describe("Middleware.scope", () => {
     defaultShouldExtractDevice
   )
 
+  /* Test: should accept empty scope */
+  it("should accept empty scope",
+    defaultShouldAcceptEmptyScope
+  )
+
+  /* Test: should multiple scopes */
+  it("should accept multiple scopes",
+    defaultShouldAcceptMultipleScopes
+  )
+
   /* Test: should throw on invalid scope */
   it("should throw on invalid scope",
     defaultShouldThrowOnInvalidScope
@@ -125,10 +135,12 @@ function defaultShouldExtractAgent() {
         next = jasmine.createSpy("next")
 
   /* Create middleware and handle error */
-  const handler = factory([{
-    type: "agent",
-    version: ["patch", "minor", "major"]
-  }])
+  const handler = factory([
+    {
+      type: "agent",
+      version: ["patch", "minor", "major"]
+    }
+  ])
   handler(req, res, next)
   expect(req.scope)
     .toEqual(["Agent 3.2.1"])
@@ -143,10 +155,12 @@ function defaultShouldExtractOperatingSystem() {
         next = jasmine.createSpy("next")
 
   /* Create middleware and handle error */
-  const handler = factory([{
-    type: "os",
-    version: ["patch", "minor", "major"]
-  }])
+  const handler = factory([
+    {
+      type: "os",
+      version: ["patch", "minor", "major"]
+    }
+  ])
   handler(req, res, next)
   expect(req.scope)
     .toEqual(["Operating System 6.5.4"])
@@ -161,13 +175,58 @@ function defaultShouldExtractDevice() {
         next = jasmine.createSpy("next")
 
   /* Create middleware and handle error */
-  const handler = factory([{
-    type: "device",
-    version: ["patch", "minor", "major"]
-  }])
+  const handler = factory([
+    {
+      type: "device",
+      version: ["patch", "minor", "major"]
+    }
+  ])
   handler(req, res, next)
   expect(req.scope)
     .toEqual(["Device 9.8.7"])
+  expect(next)
+    .toHaveBeenCalled()
+}
+
+/* Test: .default should accept empty scope */
+function defaultShouldAcceptEmptyScope() {
+  const req  = httpMocks.createRequest(),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Create middleware and handle error */
+  const handler = factory()
+  handler(req, res, next)
+  expect(req.scope)
+    .toEqual([])
+  expect(next)
+    .toHaveBeenCalled()
+}
+
+/* Test: .default should accept multiple scopes */
+function defaultShouldAcceptMultipleScopes() {
+  const req  = httpMocks.createRequest(),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Create middleware and handle error */
+  const handler = factory([
+    {
+      type: "agent",
+      version: ["patch", "minor", "major"]
+    },
+    {
+      type: "os",
+      version: ["patch", "minor", "major"]
+    },
+    {
+      type: "device",
+      version: ["patch", "minor", "major"]
+    }
+  ])
+  handler(req, res, next)
+  expect(req.scope)
+    .toEqual(["Agent 3.2.1", "Operating System 6.5.4", "Device 9.8.7"])
   expect(next)
     .toHaveBeenCalled()
 }
