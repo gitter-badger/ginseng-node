@@ -108,15 +108,6 @@ function factoryShouldReturnPromise(done) {
     .toEqual(jasmine.any(Promise))
 }
 
-/* Test: .factory should return promise */
-function factoryShouldReturnPromise(done) {
-  expect(factory()
-    .then(done)
-    .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
-}
-
 /* Test: .factory should prepend directory if relative */
 function factoryShouldPrependDirectoryIfRelative(done) {
   factory("fail/relative")
