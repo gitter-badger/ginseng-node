@@ -384,14 +384,14 @@ describe("Storage.FileSystem", () => {
       scopeShouldReturnScopedFileSystem
     )
 
-    /* Test: should reject on empty parts */
-    it("should reject on empty parts",
-      scopeShouldRejectOnEmptyParts
+    /* Test: should throw on empty parts */
+    it("should throw on empty parts",
+      scopeShouldThrowOnEmptyParts
     )
 
-    /* Test: should reject on invalid parts */
-    it("should reject on invalid parts",
-      scopeShouldRejectOnInvalidParts
+    /* Test: should throw on invalid parts */
+    it("should throw on invalid parts",
+      scopeShouldThrowOnInvalidParts
     )
   })
 
@@ -996,16 +996,16 @@ function scopeShouldReturnScopedFileSystem(done) {
     .catch(done.fail)
 }
 
-/* Test: #scope should reject on empty parts */
-function scopeShouldRejectOnEmptyParts() {
+/* Test: #scope should throw on empty parts */
+function scopeShouldThrowOnEmptyParts() {
   expect(() => {
     new FileSystem("scope").scope()
   }).toThrow(
     new TypeError("Invalid scope: []"))
 }
 
-/* Test: #scope should reject on invalid parts */
-function scopeShouldRejectOnInvalidParts() {
+/* Test: #scope should throw on invalid parts */
+function scopeShouldThrowOnInvalidParts() {
   expect(() => {
     new FileSystem("scope").scope("agent", 10)
   }).toThrow(

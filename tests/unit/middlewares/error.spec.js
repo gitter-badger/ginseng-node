@@ -38,7 +38,7 @@ describe("Middleware.error", () => {
     defaultShouldReturnConnectCompatibleMiddleware
   )
 
-    /* Test: should should set content type */
+  /* Test: should set content type */
   it("should set content type",
     defaultShouldSetContentType
   )

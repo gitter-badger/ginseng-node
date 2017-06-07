@@ -63,6 +63,11 @@ describe("Middleware.stage", () => {
     defaultShouldThrowOnInvalidInitializer
   )
 
+  /* Test: should throw on invalid options */
+  it("should throw on invalid options",
+    defaultShouldThrowOnInvalidOptions
+  )
+
   /* Test: should throw on invalid router */
   it("should throw on invalid router",
     defaultShouldThrowOnInvalidRouter
@@ -71,20 +76,14 @@ describe("Middleware.stage", () => {
   /* .get */
   describe(".get", () => {
 
-    /* Register spies */
-    beforeEach(() => {
-      spyOn(useragent, "parse")
-        .and.returnValue({
-          toAgent: () => "agent",
-          os: {
-            toString: () => "os"
-          }
-        })
-    })
-
     /* Test: should return connect-compatible middleware */
     it("should return connect-compatible middleware",
       getShouldReturnConnectCompatibleMiddleware
+    )
+
+    /* Test: should scope storage */
+    it("should scope storage",
+      getShouldScopeStorage
     )
 
     /* Test: should set content type on success */
@@ -121,20 +120,14 @@ describe("Middleware.stage", () => {
   /* .post */
   describe(".post", () => {
 
-    /* Register spies */
-    beforeEach(() => {
-      spyOn(useragent, "parse")
-        .and.returnValue({
-          toAgent: () => "agent",
-          os: {
-            toString: () => "os"
-          }
-        })
-    })
-
     /* Test: should return connect-compatible middleware */
     it("should return connect-compatible middleware",
       postShouldReturnConnectCompatibleMiddleware
+    )
+
+    /* Test: should scope storage */
+    it("should scope storage",
+      postShouldScopeStorage
     )
 
     /* Test: should set HTTP status to 200 on success */
@@ -161,7 +154,7 @@ describe("Middleware.stage", () => {
 /* Test: .default should return router */
 function defaultShouldReturnRouter() {
   const router = new Router()
-  expect(factory(Promise.resolve(), router))
+  expect(factory(Promise.resolve(), { router }))
     .toEqual(router)
 }
 
@@ -175,7 +168,7 @@ function defaultShouldReturnDefaultRouter() {
 function defaultShouldRegisterHttpGetHandler() {
   const router = new Router()
   spyOn(router, "get")
-  factory(Promise.resolve(), router)
+  factory(Promise.resolve(), { router })
   expect(router.get)
     .toHaveBeenCalledWith("/:path(\\S*)?", jasmine.any(Function))
 }
@@ -184,7 +177,7 @@ function defaultShouldRegisterHttpGetHandler() {
 function defaultShouldRegisterHttpPostHandler() {
   const router = new Router()
   spyOn(router, "post")
-  factory(Promise.resolve(), router)
+  factory(Promise.resolve(), { router })
   expect(router.post)
     .toHaveBeenCalledWith("/:path(\\S*)?", jasmine.any(Function))
 }
@@ -197,10 +190,18 @@ function defaultShouldThrowOnInvalidInitializer() {
     new TypeError("Invalid initializer: null"))
 }
 
+/* Test: .default should throw on invalid options */
+function defaultShouldThrowOnInvalidOptions() {
+  expect(() => {
+    factory(Promise.resolve(), "invalid")
+  }).toThrow(
+    new TypeError("Invalid options: 'invalid'"))
+}
+
 /* Test: .default should throw on invalid router */
 function defaultShouldThrowOnInvalidRouter() {
   expect(() => {
-    factory(Promise.resolve(), "invalid")
+    factory(Promise.resolve(), { router: "invalid" })
   }).toThrow(
     new TypeError("Invalid router: 'invalid'"))
 }
@@ -215,8 +216,8 @@ function getShouldReturnConnectCompatibleMiddleware() {
     .toEqual(3)
 }
 
-/* Test: .get should set content type on success */
-function getShouldSetContentTypeOnSuccess(done) {
+/* Test: .get should scope storage */
+function getShouldScopeStorage(done) {
   const storage = {
     scope: jasmine.createSpy("scope").and.returnValue(
       Promise.resolve({
@@ -224,6 +225,33 @@ function getShouldSetContentTypeOnSuccess(done) {
         fetch: jasmine.createSpy("fetch").and.returnValue(
           Promise.resolve({ data: true }))
       }))
+  }
+
+  /* Mock middleware parameters */
+  const req  = httpMocks.createRequest(),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Set scope */
+  req.scope = ["agent", "os"]
+
+  /* Create middleware and resolve request */
+  const handler = get(Promise.resolve(storage))
+  handler(req, res, next)
+    .then(() => {
+      expect(storage.scope)
+        .toHaveBeenCalledWith(...req.scope)
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .get should set content type on success */
+function getShouldSetContentTypeOnSuccess(done) {
+  const storage = {
+    valid: jasmine.createSpy("valid").and.returnValue(true),
+    fetch: jasmine.createSpy("fetch").and.returnValue(
+      Promise.resolve({ data: true }))
   }
 
   /* Mock middleware parameters */
@@ -245,10 +273,7 @@ function getShouldSetContentTypeOnSuccess(done) {
 /* Test: .get should not set content type on error */
 function getShouldNotSetContentTypeOnError(done) {
   const storage = {
-    scope: jasmine.createSpy("scope").and.returnValue(
-      Promise.resolve({
-        valid: jasmine.createSpy("valid").and.returnValue(false)
-      }))
+    valid: jasmine.createSpy("valid").and.returnValue(false)
   }
 
   /* Mock middleware parameters */
@@ -270,12 +295,9 @@ function getShouldNotSetContentTypeOnError(done) {
 /* Test: .get should set HTTP status to 200 on success */
 function getShouldSetHttpStatusTo200OnSuccess(done) {
   const storage = {
-    scope: jasmine.createSpy("scope").and.returnValue(
-      Promise.resolve({
-        valid: jasmine.createSpy("valid").and.returnValue(true),
-        fetch: jasmine.createSpy("fetch").and.returnValue(
-          Promise.resolve({ data: true }))
-      }))
+    valid: jasmine.createSpy("valid").and.returnValue(true),
+    fetch: jasmine.createSpy("fetch").and.returnValue(
+      Promise.resolve({ data: true }))
   }
 
   /* Mock middleware parameters */
@@ -303,10 +325,7 @@ function getShouldSetHttpStatusTo200OnSuccess(done) {
 /* Test: .get should set HTTP status to 404 on non-existing suite */
 function getShouldSetHttpStatusTo404OnNonExistingSuite(done) {
   const storage = {
-    scope: jasmine.createSpy("scope").and.returnValue(
-      Promise.resolve({
-        valid: jasmine.createSpy("valid").and.returnValue(false)
-      }))
+    valid: jasmine.createSpy("valid").and.returnValue(false)
   }
 
   /* Mock middleware parameters */
@@ -324,7 +343,7 @@ function getShouldSetHttpStatusTo404OnNonExistingSuite(done) {
         .toEqual(404)
       expect(next)
         .toHaveBeenCalledWith(new ReferenceError(
-          "Invalid path: 'invalid' not found for [ 'agent', 'os' ]"))
+          "Invalid path: 'invalid' not found for []"))
       done()
     })
     .catch(done.fail)
@@ -333,12 +352,9 @@ function getShouldSetHttpStatusTo404OnNonExistingSuite(done) {
 /* Test: .get should set HTTP status to 500 on internal error */
 function getShouldSetHttpStatusTo500OnInternalError(done) {
   const storage = {
-    scope: jasmine.createSpy("scope").and.returnValue(
-      Promise.resolve({
-        valid: jasmine.createSpy("valid").and.returnValue(true),
-        fetch: jasmine.createSpy("fetch").and.returnValue(
-          Promise.reject(new Error("Internal error")))
-      }))
+    valid: jasmine.createSpy("valid").and.returnValue(true),
+    fetch: jasmine.createSpy("fetch").and.returnValue(
+      Promise.reject(new Error("Internal error")))
   }
 
   /* Mock middleware parameters */
@@ -380,13 +396,40 @@ function postShouldReturnConnectCompatibleMiddleware() {
     .toEqual(3)
 }
 
-/* Test: .post should set HTTP status to 200 on success */
-function postShouldSetHttpStatusTo200OnSuccess(done) {
+/* Test: .get should scope storage */
+function postShouldScopeStorage(done) {
   const storage = {
     scope: jasmine.createSpy("scope").and.returnValue(
       Promise.resolve({
-        store: jasmine.createSpy("store").and.returnValue(Promise.resolve())
+        valid: jasmine.createSpy("valid").and.returnValue(true),
+        fetch: jasmine.createSpy("fetch").and.returnValue(
+          Promise.resolve({ data: true }))
       }))
+  }
+
+  /* Mock middleware parameters */
+  const req  = httpMocks.createRequest(),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Set scope */
+  req.scope = ["agent", "os"]
+
+  /* Create middleware and resolve request */
+  const handler = post(Promise.resolve(storage))
+  handler(req, res, next)
+    .then(() => {
+      expect(storage.scope)
+        .toHaveBeenCalledWith(...req.scope)
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .post should set HTTP status to 200 on success */
+function postShouldSetHttpStatusTo200OnSuccess(done) {
+  const storage = {
+    store: jasmine.createSpy("store").and.returnValue(Promise.resolve())
   }
 
   /* Mock middleware parameters */
@@ -414,11 +457,8 @@ function postShouldSetHttpStatusTo200OnSuccess(done) {
 /* Test: .post should set HTTP status to 500 on internal error */
 function postShouldSetHttpStatusTo500OnInternalError(done) {
   const storage = {
-    scope: jasmine.createSpy("scope").and.returnValue(
-      Promise.resolve({
-        store: jasmine.createSpy("store").and.returnValue(
-          Promise.reject(new Error("Internal error")))
-      }))
+    store: jasmine.createSpy("store").and.returnValue(
+      Promise.reject(new Error("Internal error")))
   }
 
   /* Mock middleware parameters */

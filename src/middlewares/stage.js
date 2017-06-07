@@ -21,7 +21,6 @@
  */
 
 import body from "body-parser"
-import useragent from "useragent"
 import { inspect } from "util"
 
 import Router from "router"
@@ -33,6 +32,9 @@ import Router from "router"
 /**
  * Initialize a middleware to fetch data from a storage
  *
+ * This method will scope the storage, if the scope was set by another
+ * middleware on the request object.
+ *
  * @param {Promise<Object>} init - Promise resolving with storage
  *
  * @return {Function} Connect-compatible middleware
@@ -43,22 +45,27 @@ export const get = init => {
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
-    const agent = useragent.parse(req.headers["user-agent"])
-    const scope = [agent.toAgent(), agent.os.toString()]                        // TODO: this should be configurable
+    req.scope = req.scope || []
 
-    /* Wait for storage to be ready */
-    return init.then(base => base.scope(...scope))
+    /* Wait for base storage to be ready */
+    return init.then(base => {
+      return req.scope.length
+        ? base.scope(...req.scope)
+        : base
+    })
+
+      /* Handle request on scoped sub storage */
       .then(storage => {
 
         /* Check if the given directory exists */
         if (!storage.valid(req.params.path)) {
           res.statusCode = 404 // Not Found
           return Promise.reject(new ReferenceError("Invalid path: " +
-            `${inspect(req.params.path)} not found for ${inspect(scope)}`))
+            `${inspect(req.params.path)} not found for ${inspect(req.scope)}`))
         }
 
         /* Fetch data from storage */
-        return storage.fetch(req.params.path, scope).then(data => {
+        return storage.fetch(req.params.path).then(data => {
           res.statusCode = 200 // OK
           res.setHeader("Content-Type", "application/json")
           res.end(JSON.stringify(data))
@@ -77,6 +84,9 @@ export const get = init => {
 /**
  * Initialize a middleware to store data in a storage
  *
+ * This method will scope the storage, if the scope was set by another
+ * middleware on the request object.
+ *
  * @param {Promise<Object>} init - Promise resolving with storage
  *
  * @return {Function} Connect-compatible middleware
@@ -87,15 +97,20 @@ export const post = init => {
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
-    const agent = useragent.parse(req.headers["user-agent"])
-    const scope = [agent.toAgent(), agent.os.toString()]
+    req.scope = req.scope || []
 
-    /* Wait for storage to be ready */
-    return init.then(base => base.scope(...scope))
+    /* Wait for base storage to be ready */
+    return init.then(base => {
+      return req.scope.length
+        ? base.scope(...req.scope)
+        : base
+    })
+
+      /* Handle request on scoped sub storage */
       .then(storage => {
 
         /* Store data in storage */
-        return storage.store(req.params.path, scope, req.body).then(() => {
+        return storage.store(req.params.path, req.body).then(() => {
           res.statusCode = 201 // Created
           res.end()
         })
@@ -114,19 +129,22 @@ export const post = init => {
  * ------------------------------------------------------------------------- */
 
 /**
- * Create a router
+ * Create a router to fetch from and store data to a stage
  *
  * @param {Promise<Object>} init - Promise resolving with storage
- * @param {Router} [ref=null] - Router reference, if given
+ * @param {Object} [options={}] - Options
+ * @param {Router} [options.router] - Router reference, if given
  *
- * @return {Router} Router
+ * @return {Router} Router, connect-compatible middleware
  */
-export default (init, ref = null) => {
-  if (ref && !(ref instanceof Router))
-    throw new TypeError(`Invalid router: ${inspect(ref)}`)
+export default (init, options = {}) => {
+  if (typeof options !== "object")
+    throw new TypeError(`Invalid options: ${inspect(options)}`)
+  if (options.router && !(options.router instanceof Router))
+    throw new TypeError(`Invalid router: ${inspect(options.router)}`)
 
   /* Create router and add JSON parser middleware */
-  const router = ref || new Router()
+  const router = options.router || new Router()
   router.use(body.json())
 
   /* Register methods for router */

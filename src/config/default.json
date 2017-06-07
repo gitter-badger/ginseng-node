@@ -1,4 +1,14 @@
 {
+  "scope": [
+    {
+      "type": "agent",
+      "version": ["major"]
+    },
+    {
+      "type": "os",
+      "version": ["major"]
+    }
+  ],
   "stages": [
     {
       "name": "snapshot",
