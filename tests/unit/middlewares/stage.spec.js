@@ -21,7 +21,6 @@
  */
 
 import httpMocks from "node-mocks-http"
-import useragent from "useragent"
 
 import Router from "router"
 
