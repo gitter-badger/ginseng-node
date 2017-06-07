@@ -175,15 +175,6 @@ export default class FileSystem {
   }
 
   /**
-   * Export all suites
-   *
-   * @return {Promise<Object>} Promise resolving with fetched data
-   */
-  fetchAll() {
-    return this.fetch(".")
-  }
-
-  /**
    * Store specifications and nested suites for a suite
    *
    * @param {string} suite - Suite name
@@ -239,13 +230,22 @@ export default class FileSystem {
   }
 
   /**
+   * Export all suites
+   *
+   * @return {Promise<Object>} Promise resolving with fetched data
+   */
+  export() {
+    return this.fetch(".")
+  }
+
+  /**
    * Import suites
    *
    * @param {Object} data - Specifications and nested suites
    *
    * @return {Promise<undefined>} Promise resolving with no result
    */
-  storeAll(data) {
+  import(data) {
     return this.store(".", data)
   }
 

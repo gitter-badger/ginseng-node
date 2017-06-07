@@ -221,50 +221,6 @@ describe("Storage.FileSystem", () => {
     )
   })
 
-  /* #fetchAll */
-  describe("#fetchAll", () => {
-
-    /* Register spies and mocks */
-    beforeEach(() => {
-
-      /* Mock filesystem */
-      fsMock({
-        "fetchAll": {
-          "genmaicha": {
-            "oolong.json": "{ \"data\": true }",
-            "sencha": {
-              "bancha.json": "{ \"data\": true }",
-              "invalid": "ignored-anyway"
-            }
-          },
-          "matcha": {
-            "hojicha.json": "{ \"data\": true }"
-          }
-        }
-      })
-    })
-
-    /* Test: should return promise */
-    it("should return promise",
-      fetchAllShouldReturnPromise
-    )
-
-    /* Test: should ignore files */
-    it("should ignore files",
-      fetchAllShouldIgnoreFiles
-    )
-
-    /* Test: should resolve with data */
-    it("should resolve with data",
-      fetchAllShouldResolveWithData
-    )
-
-    /* Test: should reject on failed stat */
-    it("should reject on failed stat",
-      fetchAllShouldRejectOnFailedStat
-    )
-  })
-
   /* #store */
   describe("#store", () => {
 
@@ -328,21 +284,75 @@ describe("Storage.FileSystem", () => {
     )
   })
 
-  /* #storeAll */
-  describe("#storeAll", () => {
+  /* #export */
+  describe("#export", () => {
 
     /* Register spies and mocks */
     beforeEach(() => {
 
       /* Mock filesystem */
       fsMock({
-        "storeAll": {}
+        "export": {
+          "genmaicha": {
+            "oolong.json": "{ \"data\": true }",
+            "sencha": {
+              "bancha.json": "{ \"data\": true }",
+              "invalid": "ignored-anyway"
+            }
+          },
+          "matcha": {
+            "hojicha.json": "{ \"data\": true }"
+          }
+        }
       })
     })
 
     /* Test: should return promise */
     it("should return promise",
-      storeAllShouldReturnPromise
+      exportShouldReturnPromise
+    )
+
+    /* Test: should ignore files */
+    it("should ignore files",
+      exportShouldIgnoreFiles
+    )
+
+    /* Test: should resolve with data */
+    it("should resolve with data",
+      exportShouldResolveWithData
+    )
+
+    /* Test: should reject on failed stat */
+    it("should reject on failed stat",
+      exportShouldRejectOnFailedStat
+    )
+  })
+
+  /* #import */
+  describe("#import", () => {
+
+    /* Register spies and mocks */
+    beforeEach(() => {
+
+      /* Mock filesystem */
+      fsMock({
+        "import": {}
+      })
+    })
+
+    /* Test: should return promise */
+    it("should return promise",
+      importShouldReturnPromise
+    )
+
+    /* Test: should persist data */
+    it("should persist data",
+      importShouldPersistData
+    )
+
+    /* Test: should reject on failed write */
+    it("should reject on failed write",
+      importShouldRejectOnFailedWrite
     )
   })
 
@@ -646,92 +656,6 @@ function fetchShouldRejectOnFailedStat(done) {
 }
 
 /* ----------------------------------------------------------------------------
- * Definitions: #fetchAll
- * ------------------------------------------------------------------------- */
-
-/* Test: #fetchAll should return promise */
-function fetchAllShouldReturnPromise(done) {
-  expect(new FileSystem("fetchAll").fetchAll()
-    .then(done)
-    .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
-}
-
-/* Test: #fetchAll should ignore files */
-function fetchAllShouldIgnoreFiles(done) {
-  fsMock({
-    "fetchAll": {
-      "genmaicha": {
-        "oolong.json": "{ \"data\": true }"
-      },
-      "invalid": "ignored-anyway"
-    }
-  })
-  new FileSystem("fetchAll").fetchAll()
-    .then(suite => {
-      expect(suite)
-        .toEqual({
-          suites: {
-            genmaicha: {
-              specs: {
-                oolong: { data: true }
-              }
-            }
-          }
-        })
-      done()
-    })
-    .catch(done.fail)
-}
-
-/* Test: #fetchAll should resolve with data */
-function fetchAllShouldResolveWithData(done) {
-  new FileSystem("fetchAll").fetchAll()
-    .then(suite => {
-      expect(suite)
-        .toEqual({
-          suites: {
-            genmaicha: {
-              specs: {
-                oolong: { data: true }
-              },
-              suites: {
-                sencha: {
-                  specs: {
-                    bancha: { data: true }
-                  }
-                }
-              }
-            },
-            matcha: {
-              specs: {
-                hojicha: { data: true }
-              }
-            }
-          }
-        })
-      done()
-    })
-    .catch(done.fail)
-}
-
-/* Test: #fetchAll should reject on failed stat */
-function fetchAllShouldRejectOnFailedStat(done) {
-  spyOn(fs, "stat")
-    .and.callFake((file, cb) => {
-      cb("fail")
-    })
-  new FileSystem("fetchAll").fetchAll()
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual("fail")
-      done()
-    })
-}
-
-/* ----------------------------------------------------------------------------
  * Definitions: #store
  * ------------------------------------------------------------------------- */
 
@@ -868,7 +792,7 @@ function storeShouldRejectOnInvalidNestedContents(done) {
     })
 }
 
-/* Test: #fetch should reject on failed write */
+/* Test: #store should reject on failed write */
 function storeShouldRejectOnFailedWrite(done) {
   spyOn(json, "writeFile")
     // eslint-disable-next-line max-params
@@ -889,16 +813,161 @@ function storeShouldRejectOnFailedWrite(done) {
 }
 
 /* ----------------------------------------------------------------------------
- * Definitions: #storeAll
+ * Definitions: #export
  * ------------------------------------------------------------------------- */
 
-/* Test: #storeAll should return promise */
-function storeAllShouldReturnPromise(done) {
-  expect(new FileSystem("storeAll").storeAll({})
+/* Test: #export should return promise */
+function exportShouldReturnPromise(done) {
+  expect(new FileSystem("export").export()
     .then(done)
     .catch(done)
   )
     .toEqual(jasmine.any(Promise))
+}
+
+/* Test: #export should ignore files */
+function exportShouldIgnoreFiles(done) {
+  fsMock({
+    "export": {
+      "genmaicha": {
+        "oolong.json": "{ \"data\": true }"
+      },
+      "invalid": "ignored-anyway"
+    }
+  })
+  new FileSystem("export").export()
+    .then(suite => {
+      expect(suite)
+        .toEqual({
+          suites: {
+            genmaicha: {
+              specs: {
+                oolong: { data: true }
+              }
+            }
+          }
+        })
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: #export should resolve with data */
+function exportShouldResolveWithData(done) {
+  new FileSystem("export").export()
+    .then(suite => {
+      expect(suite)
+        .toEqual({
+          suites: {
+            genmaicha: {
+              specs: {
+                oolong: { data: true }
+              },
+              suites: {
+                sencha: {
+                  specs: {
+                    bancha: { data: true }
+                  }
+                }
+              }
+            },
+            matcha: {
+              specs: {
+                hojicha: { data: true }
+              }
+            }
+          }
+        })
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: #export should reject on failed stat */
+function exportShouldRejectOnFailedStat(done) {
+  spyOn(fs, "stat")
+    .and.callFake((file, cb) => {
+      cb("fail")
+    })
+  new FileSystem("export").export()
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual("fail")
+      done()
+    })
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: #import
+ * ------------------------------------------------------------------------- */
+
+/* Test: #import should return promise */
+function importShouldReturnPromise(done) {
+  expect(new FileSystem("import").import({})
+    .then(done)
+    .catch(done)
+  )
+    .toEqual(jasmine.any(Promise))
+}
+
+/* Test: #import should persist data */
+function importShouldPersistData(done) {
+  new FileSystem("import").import({
+    suites: {
+      genmaicha: {
+        specs: {
+          oolong: { data: true }
+        },
+        suites: {
+          sencha: {
+            specs: {
+              bancha: { data: true }
+            }
+          }
+        }
+      },
+      matcha: {
+        specs: {
+          hojicha: { data: true }
+        }
+      }
+    }
+  })
+    .then(() => {
+      expect(fs.readFileSync("import/genmaicha/oolong.json", "utf8"))
+        .toEqual("{\n  \"data\": true\n}\n")
+      expect(fs.readFileSync("import/genmaicha/sencha/bancha.json", "utf8"))
+        .toEqual("{\n  \"data\": true\n}\n")
+      expect(fs.readFileSync("import/matcha/hojicha.json", "utf8"))
+        .toEqual("{\n  \"data\": true\n}\n")
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: #import should reject on failed write */
+function importShouldRejectOnFailedWrite(done) {
+  spyOn(json, "writeFile")
+    // eslint-disable-next-line max-params
+    .and.callFake((file, data, options, cb) => {
+      cb("fail")
+    })
+  new FileSystem("import").import({
+    suites: {
+      genmaicha: {
+        specs: {
+          oolong: { data: true }
+        }
+      }
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual("fail")
+      done()
+    })
 }
 
 /* ----------------------------------------------------------------------------

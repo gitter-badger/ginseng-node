@@ -39,7 +39,7 @@ export const factory = (type, ...args) => {
     if (typeof type !== "string" || !type.length)
       throw new TypeError(`Invalid type: ${inspect(type)}`)
 
-    /* Require and initialize storage */
+    /* Load and initialize storage */
     try {
       require(`./${type}`).factory(...args)
         .then(resolve)
