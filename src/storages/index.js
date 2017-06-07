@@ -20,6 +20,7 @@
  * IN THE SOFTWARE.
  */
 
+import path from "path"
 import { inspect } from "util"
 
 /* ----------------------------------------------------------------------------
@@ -37,12 +38,14 @@ import { inspect } from "util"
 export const factory = (type, ...args) => {
   return new Promise((resolve, reject) => {
     if (typeof type !== "string" || !type.length)
-      throw new TypeError(`Invalid type: ${inspect(type)}`)
+      return reject(new TypeError(`Invalid type: ${inspect(type)}`))
 
     /* Load and initialize storage */
     try {
-      require(`./${type}`).factory(...args)
+      const base = path.isAbsolute(type) ? "" : __dirname
+      require(path.resolve(base, type)).factory(...args)
         .then(resolve)
+        .catch(reject)
     } catch (err) {
       reject(err)
     }
