@@ -32,10 +32,10 @@ import Router from "router"
 /**
  * Initialize a middleware to fetch data from a storage
  *
- * This method will scope the storage, if the scope was set by another
- * middleware on the request object.
+ * This method will scope the storage, if the scope was set on the request
+ * object by a previous middleware.
  *
- * @param {Promise<Object>} init - Promise resolving with storage
+ * @param {Promise<AbstractStorage>} init - Promise resolving with storage
  *
  * @return {Function} Connect-compatible middleware
  */
@@ -84,10 +84,10 @@ export const get = init => {
 /**
  * Initialize a middleware to store data in a storage
  *
- * This method will scope the storage, if the scope was set by another
- * middleware on the request object.
+ * This method will scope the storage, if the scope was set on the request
+ * object by a previous middleware.
  *
- * @param {Promise<Object>} init - Promise resolving with storage
+ * @param {Promise<AbstractStorage>} init - Promise resolving with storage
  *
  * @return {Function} Connect-compatible middleware
  */
@@ -131,7 +131,7 @@ export const post = init => {
 /**
  * Create a router to fetch from and store data to a stage
  *
- * @param {Promise<Object>} init - Promise resolving with storage
+ * @param {Promise<AbstractStorage>} init - Promise resolving with storage
  * @param {Object} [options={}] - Options
  * @param {Router} [options.router] - Router reference, if given
  *

@@ -27,6 +27,8 @@ import mkdirp from "mkdirp-promise"
 import path from "path"
 import { inspect } from "util"
 
+import AbstractStorage from "./abstract"
+
 /* ----------------------------------------------------------------------------
  * Variables
  * ------------------------------------------------------------------------- */
@@ -66,7 +68,7 @@ export const inrange = suite => FILE_SYSTEM_CHARACTER_RANGE.test(suite)
  * Class
  * ------------------------------------------------------------------------- */
 
-export default class FileSystem {
+export default class FileSystemStorage extends AbstractStorage {
 
   /**
    * Create a file system storage
@@ -89,6 +91,9 @@ export default class FileSystem {
     /* Check for base directory */
     if (!(fs.existsSync(base) && fs.statSync(base).isDirectory()))
       throw new Error(`Invalid base: ${inspect(base)}`)
+
+    /* Call base constructor */
+    super()
 
     /* Set base path */
     this.base_ = base
@@ -254,7 +259,7 @@ export default class FileSystem {
    *
    * @param {...string} suites - Suite names
    *
-   * @return {Promise<FileSystem>} Promise resolving with file system storage
+   * @return {Promise<FileSystemStorage>} Promise resolving with storage
    */
   scope(...suites) {
     if (suites.find(suite => typeof suite !== "string" || !inrange(suite)) ||
@@ -264,7 +269,7 @@ export default class FileSystem {
     /* Ensure scoped base is present and return sub storage */
     const base = path.join(this.base_, ...suites)
     return mkdirp(base)
-      .then(() => new FileSystem(base))
+      .then(() => new FileSystemStorage(base))
   }
 
   /**
@@ -286,9 +291,9 @@ export default class FileSystem {
  *
  * @param {string} base - Base directory
  *
- * @return {Promise<FileSystem>} Promise resolving with file system storage
+ * @return {Promise<FileSystemStorage>} Promise resolving with storage
  */
 export const factory = base => {
   return mkdirp(base)
-    .then(() => new FileSystem(base))
+    .then(() => new FileSystemStorage(base))
 }

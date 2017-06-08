@@ -54,7 +54,6 @@ export default (scope = []) => {
   /* Return connect-compatible middleware */
   return (req, res, next) => {
     const agent = useragent.parse(req.headers["user-agent"]).toJSON().agent
-
     // eslint-disable-next-line array-callback-return
     req.scope = scope.reduce((result, part) => {
       const current = { agent, os: agent.os, device: agent.device }[part.type]

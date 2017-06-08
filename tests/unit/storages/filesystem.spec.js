@@ -28,7 +28,7 @@ import path from "path"
 import {
   factory,
   inrange,
-  default as FileSystem
+  default as FileSystemStorage
 } from "~/src/storages/filesystem"
 
 /* ----------------------------------------------------------------------------
@@ -469,7 +469,7 @@ function inrangeShouldFailOnReservedCharacters() {
 /* Test: #constructor should set base directory */
 function constructorShouldSetBaseDirectory() {
   const directory = "constructor"
-  const storage = new FileSystem(directory)
+  const storage = new FileSystemStorage(directory)
   expect(storage.base)
     .toEqual(directory)
 }
@@ -477,7 +477,7 @@ function constructorShouldSetBaseDirectory() {
 /* Test: #constructor should throw on empty base directory */
 function constructorShouldThrowOnEmptyBaseDirectory() {
   expect(() => {
-    new FileSystem("")
+    new FileSystemStorage("")
   }).toThrow(
     new TypeError("Invalid base: ''"))
 }
@@ -485,7 +485,7 @@ function constructorShouldThrowOnEmptyBaseDirectory() {
 /* Test: #constructor should throw on invalid base directory */
 function constructorShouldThrowOnInvalidBaseDirectory() {
   expect(() => {
-    new FileSystem(null)
+    new FileSystemStorage(null)
   }).toThrow(
     new TypeError("Invalid base: null"))
 }
@@ -494,7 +494,7 @@ function constructorShouldThrowOnInvalidBaseDirectory() {
 function constructorShouldThrowOnNonExistingBaseDirectory() {
   const directory = "constructor/invalid"
   expect(() => {
-    new FileSystem(directory)
+    new FileSystemStorage(directory)
   }).toThrow(
     new TypeError(`Invalid base: '${directory}'`))
 }
@@ -503,7 +503,7 @@ function constructorShouldThrowOnNonExistingBaseDirectory() {
 function constructorShouldThrowOnFile() {
   const directory = "constructor/genmaicha/oolong"
   expect(() => {
-    new FileSystem(directory)
+    new FileSystemStorage(directory)
   }).toThrow(
     new TypeError(`Invalid base: '${directory}'`))
 }
@@ -514,26 +514,26 @@ function constructorShouldThrowOnFile() {
 
 /* Test: #valid should succeed on existing suite */
 function validShouldSucceedOnExistingSuite() {
-  expect(new FileSystem("valid").valid("genmaicha"))
+  expect(new FileSystemStorage("valid").valid("genmaicha"))
     .toBe(true)
 }
 
 /* Test: #valid should succeed on existing suite */
 function validShouldFailOnNonExistingSuite() {
-  expect(new FileSystem("valid").valid("invalid"))
+  expect(new FileSystemStorage("valid").valid("invalid"))
     .toBe(false)
 }
 
 /* Test: #valid should fail on file */
 function validShouldFailOnFile() {
-  expect(new FileSystem("valid").valid("sencha"))
+  expect(new FileSystemStorage("valid").valid("sencha"))
     .toBe(false)
 }
 
 /* Test: #valid should throw on empty suite name */
 function validShouldThrowOnEmptySuiteName() {
   expect(() => {
-    new FileSystem("valid").valid("")
+    new FileSystemStorage("valid").valid("")
   }).toThrow(
     new TypeError("Invalid suite name: ''"))
 }
@@ -541,7 +541,7 @@ function validShouldThrowOnEmptySuiteName() {
 /* Test: #valid should throw on invalid suite name */
 function validShouldThrowOnInvalidSuiteName() {
   expect(() => {
-    new FileSystem("valid").valid(null)
+    new FileSystemStorage("valid").valid(null)
   }).toThrow(
     new TypeError("Invalid suite name: null"))
 }
@@ -552,7 +552,7 @@ function validShouldThrowOnInvalidSuiteName() {
 
 /* Test: #fetch should return promise */
 function fetchShouldReturnPromise(done) {
-  expect(new FileSystem("fetch").fetch()
+  expect(new FileSystemStorage("fetch").fetch()
     .then(done)
     .catch(done)
   )
@@ -561,7 +561,7 @@ function fetchShouldReturnPromise(done) {
 
 /* Test: #fetch should resolve with data */
 function fetchShouldResolveWithData(done) {
-  new FileSystem("fetch").fetch("genmaicha")
+  new FileSystemStorage("fetch").fetch("genmaicha")
     .then(suite => {
       expect(suite)
         .toEqual({
@@ -583,7 +583,7 @@ function fetchShouldResolveWithData(done) {
 
 /* Test: #fetch should resolve with nested data */
 function fetchShouldResolveWithNestedData(done) {
-  new FileSystem("fetch").fetch("genmaicha/sencha")
+  new FileSystemStorage("fetch").fetch("genmaicha/sencha")
     .then(suite => {
       expect(suite)
         .toEqual({
@@ -598,7 +598,7 @@ function fetchShouldResolveWithNestedData(done) {
 
 /* Test: #fetch should reject on empty suite name */
 function fetchShouldRejectOnEmptySuiteName(done) {
-  new FileSystem("fetch").fetch("")
+  new FileSystemStorage("fetch").fetch("")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -609,7 +609,7 @@ function fetchShouldRejectOnEmptySuiteName(done) {
 
 /* Test: #fetch should reject on invalid suite name */
 function fetchShouldRejectOnInvalidSuiteName(done) {
-  new FileSystem("fetch").fetch(null)
+  new FileSystemStorage("fetch").fetch(null)
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -620,7 +620,7 @@ function fetchShouldRejectOnInvalidSuiteName(done) {
 
 /* Test: #fetch should reject on invalid contents */
 function fetchShouldRejectOnInvalidContents(done) {
-  new FileSystem("fetch").fetch("matcha")
+  new FileSystemStorage("fetch").fetch("matcha")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -631,7 +631,7 @@ function fetchShouldRejectOnInvalidContents(done) {
 
 /* Test: #fetch should reject on non-existing suite */
 function fetchShouldRejectOnNonExistingSuite(done) {
-  new FileSystem("fetch").fetch("invalid")
+  new FileSystemStorage("fetch").fetch("invalid")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -646,7 +646,7 @@ function fetchShouldRejectOnFailedStat(done) {
     .and.callFake((file, cb) => {
       cb("fail")
     })
-  new FileSystem("fetch").fetch("genmaicha")
+  new FileSystemStorage("fetch").fetch("genmaicha")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -661,7 +661,7 @@ function fetchShouldRejectOnFailedStat(done) {
 
 /* Test: #store should return promise */
 function storeShouldReturnPromise(done) {
-  expect(new FileSystem("store").store("genmaicha", {})
+  expect(new FileSystemStorage("store").store("genmaicha", {})
     .then(done)
     .catch(done)
   )
@@ -670,7 +670,7 @@ function storeShouldReturnPromise(done) {
 
 /* Test: #store should persist data */
 function storeShouldPersistData(done) {
-  new FileSystem("store").store("genmaicha", {
+  new FileSystemStorage("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
     }
@@ -685,7 +685,7 @@ function storeShouldPersistData(done) {
 
 /* Test: #store should persist data */
 function storeShouldPersistNestedData(done) {
-  new FileSystem("store").store("genmaicha/sencha", {
+  new FileSystemStorage("store").store("genmaicha/sencha", {
     specs: {
       bancha: { data: true }
     }
@@ -700,7 +700,7 @@ function storeShouldPersistNestedData(done) {
 
 /* Test: #store should persist nested suites */
 function storeShouldPersistNestedSuites(done) {
-  new FileSystem("store").store("genmaicha", {
+  new FileSystemStorage("store").store("genmaicha", {
     suites: {
       sencha: {
         specs: {
@@ -719,7 +719,7 @@ function storeShouldPersistNestedSuites(done) {
 
 /* Test: #store should Reject on empty suite name */
 function storeShouldRejectOnEmptySuiteName(done) {
-  new FileSystem("store").store("", {})
+  new FileSystemStorage("store").store("", {})
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -730,7 +730,7 @@ function storeShouldRejectOnEmptySuiteName(done) {
 
 /* Test: #store should reject on invalid suite name */
 function storeShouldRejectOnInvalidSuiteName(done) {
-  new FileSystem("store").store(null, {})
+  new FileSystemStorage("store").store(null, {})
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -741,7 +741,7 @@ function storeShouldRejectOnInvalidSuiteName(done) {
 
 /* Test: #store should reject on invalid data */
 function storeShouldRejectOnInvalidData(done) {
-  new FileSystem("store").store("shincha", "invalid")
+  new FileSystemStorage("store").store("shincha", "invalid")
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -752,7 +752,7 @@ function storeShouldRejectOnInvalidData(done) {
 
 /* Test: #store should reject on invalid contents */
 function storeShouldRejectOnInvalidContents(done) {
-  new FileSystem("store").store("genmaicha", {
+  new FileSystemStorage("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
     },
@@ -775,7 +775,7 @@ function storeShouldRejectOnInvalidContents(done) {
 
 /* Test: #store should reject on invalid nested contents */
 function storeShouldRejectOnInvalidNestedContents(done) {
-  new FileSystem("store").store("genmaicha", {
+  new FileSystemStorage("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
     },
@@ -799,7 +799,7 @@ function storeShouldRejectOnFailedWrite(done) {
     .and.callFake((file, data, options, cb) => {
       cb("fail")
     })
-  new FileSystem("store").store("genmaicha", {
+  new FileSystemStorage("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
     }
@@ -818,7 +818,7 @@ function storeShouldRejectOnFailedWrite(done) {
 
 /* Test: #export should return promise */
 function exportShouldReturnPromise(done) {
-  expect(new FileSystem("export").export()
+  expect(new FileSystemStorage("export").export()
     .then(done)
     .catch(done)
   )
@@ -835,7 +835,7 @@ function exportShouldIgnoreFiles(done) {
       "invalid": "ignored-anyway"
     }
   })
-  new FileSystem("export").export()
+  new FileSystemStorage("export").export()
     .then(suite => {
       expect(suite)
         .toEqual({
@@ -854,7 +854,7 @@ function exportShouldIgnoreFiles(done) {
 
 /* Test: #export should resolve with data */
 function exportShouldResolveWithData(done) {
-  new FileSystem("export").export()
+  new FileSystemStorage("export").export()
     .then(suite => {
       expect(suite)
         .toEqual({
@@ -889,7 +889,7 @@ function exportShouldRejectOnFailedStat(done) {
     .and.callFake((file, cb) => {
       cb("fail")
     })
-  new FileSystem("export").export()
+  new FileSystemStorage("export").export()
     .then(done.fail)
     .catch(err => {
       expect(err)
@@ -904,7 +904,7 @@ function exportShouldRejectOnFailedStat(done) {
 
 /* Test: #import should return promise */
 function importShouldReturnPromise(done) {
-  expect(new FileSystem("import").import({})
+  expect(new FileSystemStorage("import").import({})
     .then(done)
     .catch(done)
   )
@@ -913,7 +913,7 @@ function importShouldReturnPromise(done) {
 
 /* Test: #import should persist data */
 function importShouldPersistData(done) {
-  new FileSystem("import").import({
+  new FileSystemStorage("import").import({
     suites: {
       genmaicha: {
         specs: {
@@ -953,7 +953,7 @@ function importShouldRejectOnFailedWrite(done) {
     .and.callFake((file, data, options, cb) => {
       cb("fail")
     })
-  new FileSystem("import").import({
+  new FileSystemStorage("import").import({
     suites: {
       genmaicha: {
         specs: {
@@ -976,7 +976,7 @@ function importShouldRejectOnFailedWrite(done) {
 
 /* Test: #scope should return promise */
 function scopeShouldReturnPromise(done) {
-  expect(new FileSystem("scope").scope("agent", "os")
+  expect(new FileSystemStorage("scope").scope("agent", "os")
     .then(done)
     .catch(done)
   )
@@ -985,7 +985,7 @@ function scopeShouldReturnPromise(done) {
 
 /* Test: #scope should return scoped file system */
 function scopeShouldReturnScopedFileSystem(done) {
-  new FileSystem("scope").scope("agent", "os")
+  new FileSystemStorage("scope").scope("agent", "os")
     .then(storage => {
       expect(storage.base)
         .toEqual("scope/agent/os")
@@ -999,7 +999,7 @@ function scopeShouldReturnScopedFileSystem(done) {
 /* Test: #scope should throw on empty parts */
 function scopeShouldThrowOnEmptyParts() {
   expect(() => {
-    new FileSystem("scope").scope()
+    new FileSystemStorage("scope").scope()
   }).toThrow(
     new TypeError("Invalid scope: []"))
 }
@@ -1007,7 +1007,7 @@ function scopeShouldThrowOnEmptyParts() {
 /* Test: #scope should throw on invalid parts */
 function scopeShouldThrowOnInvalidParts() {
   expect(() => {
-    new FileSystem("scope").scope("agent", 10)
+    new FileSystemStorage("scope").scope("agent", 10)
   }).toThrow(
     new TypeError("Invalid scope: [ 'agent', 10 ]"))
 }

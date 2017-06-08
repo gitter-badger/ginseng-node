@@ -20,34 +20,28 @@
  * IN THE SOFTWARE.
  */
 
-import path from "path"
 import { inspect } from "util"
 
 /* ----------------------------------------------------------------------------
- * Factory
+ * Class
  * ------------------------------------------------------------------------- */
 
-/**
- * Create a storage of given type
- *
- * @param {string} type - Storage type
- * @param {...*} args - Storage arguments
- *
- * @return {Promise<AbstractStorage>} Promise resolving with storage
- */
-export const factory = (type, ...args) => {
-  return new Promise((resolve, reject) => {
-    if (typeof type !== "string" || !type.length)
-      return reject(new TypeError(`Invalid type: ${inspect(type)}`))
+export default class AbstractStorage {
 
-    /* Load and initialize storage */
-    try {
-      const base = path.isAbsolute(type) ? "" : __dirname
-      require(path.resolve(base, type)).factory(...args)
-        .then(resolve)
-        .catch(reject)
-    } catch (err) {
-      reject(err)
-    }
-  })
+  /**
+   * Abstract storage
+   *
+   * @constructor
+   */
+  constructor() {
+    if (this.constructor === AbstractStorage)
+      throw new TypeError("Invalid call to constructor of abstract class")
+
+    /* Check all relevant methods are implemented */
+    ;["valid", "fetch", "store", "export", "import", "scope"].forEach(name => {
+      if (!this[name])
+        throw new TypeError(
+          `Invalid class: ${inspect(name)} not implemented`)
+    })
+  }
 }
