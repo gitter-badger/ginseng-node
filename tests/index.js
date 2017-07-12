@@ -23,7 +23,7 @@
 import path from "path"
 
 import Jasmine from "jasmine"
-// import { SpecReporter } from "jasmine-spec-reporter"
+import { SpecReporter } from "jasmine-spec-reporter"
 
 /* ----------------------------------------------------------------------------
  * Entrypoint
@@ -38,13 +38,13 @@ const jasmine = new Jasmine()
 // eslint-disable-next-line no-unused-expressions
 jasmine.loadConfigFile(path.resolve(__dirname, "jasmine.json"))
 
-/* Configure spec reporter *//
-// jasmine.clearReporters()
-// jasmine.addReporter(new SpecReporter({
-//   spec: {
-//     displayStacktrace: true
-//   }
-// }))
+/* Configure spec reporter */
+jasmine.clearReporters()
+jasmine.addReporter(new SpecReporter({
+  spec: {
+    displayStacktrace: true
+  }
+}))
 
 /* Start test runner */
 jasmine.execute()
