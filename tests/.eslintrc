@@ -18,6 +18,7 @@
     "jasmine/valid-expect": 1,
     "no-invalid-this": 0,
     "no-undefined": 0,
+    "no-underscore-dangle": 0,
     "no-use-before-define": 0,
     "require-jsdoc": 0
   }

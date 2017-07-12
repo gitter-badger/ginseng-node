@@ -124,21 +124,20 @@ export default class Ginseng {
         /* Update target stage with data from source stage */
         .then(([source, target]) => {
           return source.export()
-            .then(data => {
-
-              let filtered = filter(data, { pattern: options.scope })
-              if (suite)
-                filtered = filter(foo, {
-                  pattern: suite, skip: this.config_.scope.length
-                })
-
-              return target.import(filtered)
-            })
-            .then(resolve)
-            //
-            // .catch(reject)
+            .then(data => target.import([
+              ...options.scope
+                ? [{ pattern: options.scope }]
+                : [],
+              ...suite
+                ? [{ pattern: suite, skip: this.config_.scope.length }]
+                : []
+            ].reduce(filter, data)))
         })
 
+        /* Resolve with no result */
+        .then(resolve)
+
+        /* Propagate error */
         .catch(reject)
     })
   }
