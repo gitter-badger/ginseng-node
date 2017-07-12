@@ -39,12 +39,12 @@ const jasmine = new Jasmine()
 jasmine.loadConfigFile(path.resolve(__dirname, "jasmine.json"))
 
 /* Configure spec reporter *//
-jasmine.clearReporters()
-jasmine.addReporter(new SpecReporter({
-  spec: {
-    displayStacktrace: true
-  }
-}))
+// jasmine.clearReporters()
+// jasmine.addReporter(new SpecReporter({
+//   spec: {
+//     displayStacktrace: true
+//   }
+// }))
 
 /* Start test runner */
 jasmine.execute()
