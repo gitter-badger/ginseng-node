@@ -23,26 +23,23 @@
 # Exit, if one command fails
 set -e
 
-# Check if "yarn install" was executed
-if [[ ! -d "$(yarn bin)" ]]; then
+# Check if "npm install" was executed
+if [[ ! -d "$(npm bin)" ]]; then
   echo "\"node_modules\" not found:"
-  echo "yarn install"
+  echo "npm install"
   exit 1
 fi
 
-# Clean build directory
-rm -rf dist
-
 # Lint sources
-"$(yarn bin)"/eslint --max-warnings 0 .
+"$(npm bin)"/eslint --max-warnings 0 .
 
-# Transpile sources to ES5
-"$(yarn bin)"/babel src --out-dir dist --copy-files
+# Build library
+"$(npm bin)"/babel src --out-dir dist --copy-files
 
 # Start test runner
-"$(yarn bin)"/cross-env NODE_ENV=test \
-  "$(yarn bin)"/nyc --reporter=lcov \
-    "$(yarn bin)"/babel-node tests/index.js
+"$(npm bin)"/cross-env NODE_ENV=test \
+  "$(npm bin)"/nyc --reporter=lcov \
+    "$(npm bin)"/babel-node tests/index.js
 
 # Upload coverage reports
-"$(yarn bin)"/codecov
+"$(npm bin)"/codecov

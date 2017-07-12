@@ -30,9 +30,6 @@ import { inspect } from "util"
 /**
  * Initialize a middleware to extract the scope of a request
  *
- * The type checks are carried outside of the middleware because they can be
- * pre-computed. Thus, everything that happens inside the middleware is safe.
- *
  * @param {Array<Object>} [scope=[]] - Scope configuration
  *
  * @return {Function} Connect-compatible middleware
@@ -53,17 +50,16 @@ export default (scope = []) => {
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
-    const agent = useragent.parse(req.headers["user-agent"]).toJSON().agent
-    // eslint-disable-next-line array-callback-return
-    req.scope = scope.reduce((result, part) => {
+    const agent = useragent.parse(req.headers["user-agent"]).toJSON()
+    req.scope = scope.reduce((parts, part) => {
       const current = { agent, os: agent.os, device: agent.device }[part.type]
 
       /* Assemble scope */
-      return [...result, [current.family,
+      return [...parts, [current.family,
         part.version.reduce((levels, level) =>
           [...levels, current[level]], []).join(".")
       ].join(" ")]
-    }, [])
+    }, []).join("/")
 
     /* Forward request to next middleware */
     next()

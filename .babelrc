@@ -9,7 +9,9 @@
       "presets": [
         ["env", { "modules": "umd" }]
       ],
-      "plugins": ["istanbul"]
+      "plugins": [
+        "istanbul"
+      ]
     }
   }
 }

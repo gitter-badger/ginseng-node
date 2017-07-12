@@ -32,8 +32,8 @@ class IncompleteStorage extends AbstractStorage {}
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Storage */
-describe("Storage.Abstract", () => {
+/* storages/Abstract */
+describe("storages/Abstract", () => {
 
   /* #constructor */
   describe("#constructor", () => {
@@ -68,6 +68,6 @@ function constructorShouldThrowOnIncompleteImplementation() {
   expect(() => {
     new IncompleteStorage()
   }).toThrow(
-    new TypeError("Invalid class: 'valid' not implemented")
+    new TypeError("Invalid storage: missing implementation for 'valid'")
   )
 }

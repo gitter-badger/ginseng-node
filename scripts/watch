@@ -23,15 +23,15 @@
 # Exit, if one command fails
 set -e
 
-# Check if "yarn install" was executed
-if [[ ! -d "$(yarn bin)" ]]; then
+# Check if "npm install" was executed
+if [[ ! -d "$(npm bin)" ]]; then
   echo "\"node_modules\" not found:"
-  echo "yarn install"
+  echo "npm install"
   exit 1
 fi
 
 # Start test runner in watch mode
-"$(yarn bin)"/cross-env NODE_ENV=development \
-  "$(yarn bin)"/nodemon --quiet \
+"$(npm bin)"/cross-env NODE_ENV=development \
+  "$(npm bin)"/nodemon --quiet \
     --watch src --watch tests/unit \
-    --exec "$(yarn bin)"/babel-node tests/index.js
+    --exec "$(npm bin)"/babel-node tests/index.js

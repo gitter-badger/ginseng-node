@@ -21,6 +21,7 @@
  */
 
 import body from "body-parser"
+import path from "path"
 import { inspect } from "util"
 
 import Router from "router"
@@ -45,12 +46,18 @@ export const get = init => {
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
-    req.scope = req.scope || []
+    req.scope = req.scope || ""
 
     /* Wait for base storage to be ready */
     return init.then(base => {
+      if (req.scope.length && !base.valid(req.scope)) {
+        res.statusCode = 404 // Not Found
+        throw new ReferenceError(`Invalid path: ${inspect(req.scope)}`)
+      }
+
+      /* Scope base storage */
       return req.scope.length
-        ? base.scope(...req.scope)
+        ? base.scope(req.scope)
         : base
     })
 
@@ -60,8 +67,8 @@ export const get = init => {
         /* Check if the given directory exists */
         if (!storage.valid(req.params.path)) {
           res.statusCode = 404 // Not Found
-          return Promise.reject(new ReferenceError("Invalid path: " +
-            `${inspect(req.params.path)} not found for ${inspect(req.scope)}`))
+          throw new ReferenceError(`Invalid path: ${
+            inspect(path.join(req.scope, req.params.path))}`)
         }
 
         /* Fetch data from storage */
@@ -97,12 +104,12 @@ export const post = init => {
 
   /* Return connect-compatible middleware */
   return (req, res, next) => {
-    req.scope = req.scope || []
+    req.scope = req.scope || ""
 
     /* Wait for base storage to be ready */
     return init.then(base => {
       return req.scope.length
-        ? base.scope(...req.scope)
+        ? base.scope(req.scope)
         : base
     })
 

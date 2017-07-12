@@ -31,6 +31,7 @@ export default class AbstractStorage {
   /**
    * Abstract storage
    *
+   * @abstract
    * @constructor
    */
   constructor() {
@@ -41,7 +42,7 @@ export default class AbstractStorage {
     ;["valid", "fetch", "store", "export", "import", "scope"].forEach(name => {
       if (!this[name])
         throw new TypeError(
-          `Invalid class: ${inspect(name)} not implemented`)
+          `Invalid storage: missing implementation for ${inspect(name)}`)
     })
   }
 }

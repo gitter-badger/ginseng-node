@@ -22,16 +22,14 @@
 
 import httpMocks from "node-mocks-http"
 
-import {
-  default as factory
-} from "~/src/middlewares/error"
+import factory from "~/src/middlewares/error"
 
 /* ----------------------------------------------------------------------------
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Middleware.error */
-describe("Middleware.error", () => {
+/* middlewares/error */
+describe("middlewares/error", () => {
 
   /* Test: should return connect-compatible middleware */
   it("should return connect-compatible middleware",
@@ -55,7 +53,10 @@ describe("Middleware.error", () => {
 
 /* Test: .default should return connect-compatible middleware */
 function defaultShouldReturnConnectCompatibleMiddleware() {
-  expect(factory().length)
+  const middleware = factory()
+  expect(middleware)
+    .toEqual(jasmine.any(Function))
+  expect(middleware.length)
     .toEqual(4)
 }
 

@@ -34,8 +34,8 @@ import {
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Middleware.stage */
-describe("Middleware.stage", () => {
+/* middlewares/stage */
+describe("middlewares/stage", () => {
 
   /* Test: should return router */
   it("should return router",
@@ -98,6 +98,11 @@ describe("Middleware.stage", () => {
     /* Test: should set HTTP status to 200 on success */
     it("should set HTTP status to 200 on success",
       getShouldSetHttpStatusTo200OnSuccess
+    )
+
+    /* Test: should set HTTP status to 404 on non-existing scope */
+    it("should set HTTP status to 404 on non-existing scope",
+      getShouldSetHttpStatusTo404OnNonExistingScope
     )
 
     /* Test: should set HTTP status to 404 on non-existing suite */
@@ -211,13 +216,17 @@ function defaultShouldThrowOnInvalidRouter() {
 
 /* Test: .get should return connect-compatible middleware */
 function getShouldReturnConnectCompatibleMiddleware() {
-  expect(get(Promise.resolve()).length)
+  const middleware = get(Promise.resolve())
+  expect(middleware)
+    .toEqual(jasmine.any(Function))
+  expect(middleware.length)
     .toEqual(3)
 }
 
 /* Test: .get should scope storage */
 function getShouldScopeStorage(done) {
   const storage = {
+    valid: jasmine.createSpy("valid").and.returnValue(true),
     scope: jasmine.createSpy("scope").and.returnValue(
       Promise.resolve({
         valid: jasmine.createSpy("valid").and.returnValue(true),
@@ -232,14 +241,14 @@ function getShouldScopeStorage(done) {
         next = jasmine.createSpy("next")
 
   /* Set scope */
-  req.scope = ["agent", "os"]
+  req.scope = "agent/os"
 
   /* Create middleware and resolve request */
   const handler = get(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(storage.scope)
-        .toHaveBeenCalledWith(...req.scope)
+        .toHaveBeenCalledWith(req.scope)
       done()
     })
     .catch(done.fail)
@@ -321,6 +330,36 @@ function getShouldSetHttpStatusTo200OnSuccess(done) {
     .catch(done.fail)
 }
 
+/* Test: .get should set HTTP status to 404 on non-existing scope */
+function getShouldSetHttpStatusTo404OnNonExistingScope(done) {
+  const storage = {
+    valid: jasmine.createSpy("valid").and.returnValue(false)
+  }
+
+  /* Mock middleware parameters */
+  const req  = httpMocks.createRequest(),
+        res  = httpMocks.createResponse(),
+        next = jasmine.createSpy("next")
+
+  /* Set scope */
+  req.scope = "agent/os"
+
+  /* Create middleware and resolve request */
+  const handler = get(Promise.resolve(storage))
+  handler(req, res, next)
+    .then(() => {
+      expect(res._isEndCalled())
+        .toBe(false)
+      expect(res.statusCode)
+        .toEqual(404)
+      expect(next)
+        .toHaveBeenCalledWith(new ReferenceError(
+          "Invalid path: 'agent/os'"))
+      done()
+    })
+    .catch(done.fail)
+}
+
 /* Test: .get should set HTTP status to 404 on non-existing suite */
 function getShouldSetHttpStatusTo404OnNonExistingSuite(done) {
   const storage = {
@@ -342,7 +381,7 @@ function getShouldSetHttpStatusTo404OnNonExistingSuite(done) {
         .toEqual(404)
       expect(next)
         .toHaveBeenCalledWith(new ReferenceError(
-          "Invalid path: 'invalid' not found for []"))
+          "Invalid path: 'invalid'"))
       done()
     })
     .catch(done.fail)
@@ -391,7 +430,10 @@ function getShouldThrowOnInvalidInitializer() {
 
 /* Test: .post should return connect-compatible middleware */
 function postShouldReturnConnectCompatibleMiddleware() {
-  expect(post(Promise.resolve()).length)
+  const middleware = post(Promise.resolve())
+  expect(middleware)
+    .toEqual(jasmine.any(Function))
+  expect(middleware.length)
     .toEqual(3)
 }
 
@@ -412,14 +454,14 @@ function postShouldScopeStorage(done) {
         next = jasmine.createSpy("next")
 
   /* Set scope */
-  req.scope = ["agent", "os"]
+  req.scope = "agent/os"
 
   /* Create middleware and resolve request */
   const handler = post(Promise.resolve(storage))
   handler(req, res, next)
     .then(() => {
       expect(storage.scope)
-        .toHaveBeenCalledWith(...req.scope)
+        .toHaveBeenCalledWith(req.scope)
       done()
     })
     .catch(done.fail)

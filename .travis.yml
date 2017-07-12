@@ -21,10 +21,6 @@
 language: node_js
 sudo: false
 
-# -----------------------------------------------------------------------------
-# Regular builds
-# -----------------------------------------------------------------------------
-
 # Node.js version and necessary services
 node_js: 5
 
@@ -41,3 +37,13 @@ cache:
 # Perform build, tests and release
 script:
   - yarn run travis
+
+# Release specification
+deploy:
+  provider: npm
+  email: $NPM_EMAIL
+  api_key: $NPM_TOKEN
+  on:
+    branch: master
+    tags: true
+  skip_cleanup: true

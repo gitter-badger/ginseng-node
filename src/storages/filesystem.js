@@ -30,7 +30,7 @@ import { inspect } from "util"
 import AbstractStorage from "./abstract"
 
 /* ----------------------------------------------------------------------------
- * Variables
+ * Constants
  * ------------------------------------------------------------------------- */
 
 /**
@@ -62,13 +62,25 @@ const FILE_SYSTEM_CHARACTER_RANGE = new RegExp(
  *
  * @return {Boolean} Test result
  */
-export const inrange = suite => FILE_SYSTEM_CHARACTER_RANGE.test(suite)
+export const inrange = suite => FILE_SYSTEM_CHARACTER_RANGE.test(suite)         // TODO: put this in util
 
 /* ----------------------------------------------------------------------------
  * Class
  * ------------------------------------------------------------------------- */
 
 export default class FileSystemStorage extends AbstractStorage {
+
+  /**
+   * Create a file system storage and ensure that the base directory is present
+   *
+   * @param {string} base - Base directory
+   *
+   * @return {Promise<FileSystemStorage>} Promise resolving with storage
+   */
+  static factory(base) {
+    return mkdirp(base)
+      .then(() => new FileSystemStorage(base))
+  }
 
   /**
    * Create a file system storage
@@ -159,8 +171,8 @@ export default class FileSystemStorage extends AbstractStorage {
                 this.fetch(path.join(suite, name))
 
                   /* Return nested suites */
-                  .then(suites =>
-                    resolveFile({ suites: { [name]: suites } }))
+                  .then(data =>
+                    resolveFile({ suites: { [name]: data } }))
 
                   /* Propagate error */
                   .catch(rejectFile)
@@ -185,7 +197,7 @@ export default class FileSystemStorage extends AbstractStorage {
    * @param {string} suite - Suite name
    * @param {Object} data - Specifications and nested suites
    *
-   * @return {Promise<undefined>} Promise resolving with no result
+   * @return {Promise<void>} Promise resolving with no result
    */
   store(suite, data) {
     return new Promise((resolve, reject) => {
@@ -248,7 +260,7 @@ export default class FileSystemStorage extends AbstractStorage {
    *
    * @param {Object} data - Specifications and nested suites
    *
-   * @return {Promise<undefined>} Promise resolving with no result
+   * @return {Promise<void>} Promise resolving with no result
    */
   import(data) {
     return this.store(".", data)
@@ -257,17 +269,16 @@ export default class FileSystemStorage extends AbstractStorage {
   /**
    * Create a scoped file system sub storage
    *
-   * @param {...string} suites - Suite names
+   * @param {string} suite - Suite name
    *
    * @return {Promise<FileSystemStorage>} Promise resolving with storage
    */
-  scope(...suites) {
-    if (suites.find(suite => typeof suite !== "string" || !inrange(suite)) ||
-        suites.length === 0)
-      throw new TypeError(`Invalid scope: ${inspect(suites)}`)
+  scope(suite) {
+    if (typeof suite !== "string" || !inrange(suite))
+      throw new TypeError(`Invalid suite name: ${inspect(suite)}`)
 
     /* Ensure scoped base is present and return sub storage */
-    const base = path.join(this.base_, ...suites)
+    const base = path.join(this.base_, suite)
     return mkdirp(base)
       .then(() => new FileSystemStorage(base))
   }
@@ -280,20 +291,4 @@ export default class FileSystemStorage extends AbstractStorage {
   get base() {
     return this.base_
   }
-}
-
-/* ----------------------------------------------------------------------------
- * Factory
- * ------------------------------------------------------------------------- */
-
-/**
- * Create a file system storage and ensure that the base directory is present
- *
- * @param {string} base - Base directory
- *
- * @return {Promise<FileSystemStorage>} Promise resolving with storage
- */
-export const factory = base => {
-  return mkdirp(base)
-    .then(() => new FileSystemStorage(base))
 }

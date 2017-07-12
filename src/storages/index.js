@@ -20,8 +20,22 @@
  * IN THE SOFTWARE.
  */
 
-import path from "path"
 import { inspect } from "util"
+
+import FileSystemStorage from "./filesystem"
+
+/* ----------------------------------------------------------------------------
+ * Factory
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Available storages
+ *
+ * @type {Object<string, AbstractStorage}
+ */
+const storages = {
+  filesystem: FileSystemStorage
+}
 
 /* ----------------------------------------------------------------------------
  * Factory
@@ -35,19 +49,14 @@ import { inspect } from "util"
  *
  * @return {Promise<AbstractStorage>} Promise resolving with storage
  */
-export const factory = (type, ...args) => {
+export default (type, ...args) => {
   return new Promise((resolve, reject) => {
-    if (typeof type !== "string" || !type.length)
+    if (typeof type !== "string" || !type.length || !storages[type])
       return reject(new TypeError(`Invalid type: ${inspect(type)}`))
 
     /* Load and initialize storage */
-    try {
-      const base = path.isAbsolute(type) ? "" : __dirname
-      require(path.resolve(base, type)).factory(...args)
-        .then(resolve)
-        .catch(reject)
-    } catch (err) {
-      reject(err)
-    }
+    storages[type].factory(...args)
+      .then(resolve)
+      .catch(reject)
   })
 }

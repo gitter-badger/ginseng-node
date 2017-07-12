@@ -26,7 +26,6 @@ import json from "jsonfile"
 import path from "path"
 
 import {
-  factory,
   inrange,
   default as FileSystemStorage
 } from "~/src/storages/filesystem"
@@ -35,8 +34,8 @@ import {
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Storage.FileSystem */
-describe("Storage.FileSystem", () => {
+/* storages/FileSystem */
+describe("storages/FileSystem", () => {
 
   /* Reset mocks */
   afterEach(() => {
@@ -69,6 +68,37 @@ describe("Storage.FileSystem", () => {
     /* Test: should fail on reserved characters */
     it("should fail on reserved characters",
       inrangeShouldFailOnReservedCharacters
+    )
+  })
+
+  /* .factory */
+  describe(".factory", () => {
+
+    /* Register mocks */
+    beforeEach(() => {
+      fsMock({
+        "factory": {}
+      })
+    })
+
+    /* Test: should return promise */
+    it("should return promise",
+      factoryShouldReturnPromise
+    )
+
+    /* Test: should use existing base directory */
+    it("should use existing base directory",
+      factoryShouldUseExistingBaseDirectory
+    )
+
+    /* Test: should create non-existing base directory */
+    it("should create non-existing base directory",
+      factoryShouldCreateNonExistingBaseDirectory
+    )
+
+    /* Test: should reject on constructor error */
+    it("should reject on constructor error",
+      factoryShouldRejectOnConstructorError
     )
   })
 
@@ -384,45 +414,14 @@ describe("Storage.FileSystem", () => {
       scopeShouldReturnScopedFileSystem
     )
 
-    /* Test: should throw on empty parts */
-    it("should throw on empty parts",
-      scopeShouldThrowOnEmptyParts
+    /* Test: should throw on empty suite name */
+    it("should throw on empty suite name",
+      scopeShouldThrowOnEmptySuiteName
     )
 
-    /* Test: should throw on invalid parts */
-    it("should throw on invalid parts",
-      scopeShouldThrowOnInvalidParts
-    )
-  })
-
-  /* .factory */
-  describe(".factory", () => {
-
-    /* Register mocks */
-    beforeEach(() => {
-      fsMock({
-        "factory": {}
-      })
-    })
-
-    /* Test: should return promise */
-    it("should return promise",
-      factoryShouldReturnPromise
-    )
-
-    /* Test: should use existing base directory */
-    it("should use existing base directory",
-      factoryShouldUseExistingBaseDirectory
-    )
-
-    /* Test: should create non-existing base directory */
-    it("should create non-existing base directory",
-      factoryShouldCreateNonExistingBaseDirectory
-    )
-
-    /* Test: should reject on constructor error */
-    it("should reject on constructor error",
-      factoryShouldRejectOnConstructorError
+    /* Test: should throw on invalid suite name */
+    it("should throw on invalid suite name",
+      scopeShouldThrowOnInvalidSuiteName
     )
   })
 })
@@ -460,6 +459,55 @@ function inrangeShouldFailOnReservedCharacters() {
   ":*?\"<>|".split("").forEach(char =>
     expect(inrange(char))
       .toBe(false))
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: .factory
+ * ------------------------------------------------------------------------- */
+
+/* Test: .factory should return promise */
+function factoryShouldReturnPromise(done) {
+  expect(FileSystemStorage.factory("factory")
+    .then(done)
+    .catch(done)
+  ).toEqual(jasmine.any(Promise))
+}
+
+/* Test: .factory should use existing base directory */
+function factoryShouldUseExistingBaseDirectory(done) {
+  FileSystemStorage.factory("factory")
+    .then(storage => {
+      expect(storage.base)
+        .toEqual("factory")
+      expect(fs.existsSync("factory"))
+        .toBe(true)
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .factory should create non-existing base directory */
+function factoryShouldCreateNonExistingBaseDirectory(done) {
+  FileSystemStorage.factory("genmaicha/sencha/bancha")
+    .then(storage => {
+      expect(storage.base)
+        .toEqual("genmaicha/sencha/bancha")
+      expect(fs.existsSync("genmaicha/sencha/bancha"))
+        .toBe(true)
+      done()
+    })
+    .catch(done.fail)
+}
+
+/* Test: .factory should reject on constructor error */
+function factoryShouldRejectOnConstructorError(done) {
+  FileSystemStorage.factory(null)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(jasmine.any(TypeError))
+      done()
+    })
 }
 
 /* ----------------------------------------------------------------------------
@@ -555,8 +603,7 @@ function fetchShouldReturnPromise(done) {
   expect(new FileSystemStorage("fetch").fetch()
     .then(done)
     .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
+  ).toEqual(jasmine.any(Promise))
 }
 
 /* Test: #fetch should resolve with data */
@@ -664,8 +711,7 @@ function storeShouldReturnPromise(done) {
   expect(new FileSystemStorage("store").store("genmaicha", {})
     .then(done)
     .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
+  ).toEqual(jasmine.any(Promise))
 }
 
 /* Test: #store should persist data */
@@ -821,8 +867,7 @@ function exportShouldReturnPromise(done) {
   expect(new FileSystemStorage("export").export()
     .then(done)
     .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
+  ).toEqual(jasmine.any(Promise))
 }
 
 /* Test: #export should ignore files */
@@ -907,8 +952,7 @@ function importShouldReturnPromise(done) {
   expect(new FileSystemStorage("import").import({})
     .then(done)
     .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
+  ).toEqual(jasmine.any(Promise))
 }
 
 /* Test: #import should persist data */
@@ -976,88 +1020,37 @@ function importShouldRejectOnFailedWrite(done) {
 
 /* Test: #scope should return promise */
 function scopeShouldReturnPromise(done) {
-  expect(new FileSystemStorage("scope").scope("agent", "os")
+  expect(new FileSystemStorage("scope").scope("agent/os")
     .then(done)
     .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
+  ).toEqual(jasmine.any(Promise))
 }
 
 /* Test: #scope should return scoped file system */
 function scopeShouldReturnScopedFileSystem(done) {
-  new FileSystemStorage("scope").scope("agent", "os")
+  new FileSystemStorage("scope").scope("agent/os")
     .then(storage => {
       expect(storage.base)
         .toEqual("scope/agent/os")
       expect(path.join)
-        .toHaveBeenCalledWith("scope", "agent", "os")
+        .toHaveBeenCalledWith("scope", "agent/os")
       done()
     })
     .catch(done.fail)
 }
 
-/* Test: #scope should throw on empty parts */
-function scopeShouldThrowOnEmptyParts() {
+/* Test: #scope should throw on empty suite name */
+function scopeShouldThrowOnEmptySuiteName() {
   expect(() => {
-    new FileSystemStorage("scope").scope()
+    new FileSystemStorage("scope").scope("")
   }).toThrow(
-    new TypeError("Invalid scope: []"))
+    new TypeError("Invalid suite name: ''"))
 }
 
-/* Test: #scope should throw on invalid parts */
-function scopeShouldThrowOnInvalidParts() {
+/* Test: #scope should throw on invalid suite name */
+function scopeShouldThrowOnInvalidSuiteName() {
   expect(() => {
-    new FileSystemStorage("scope").scope("agent", 10)
+    new FileSystemStorage("scope").scope(null)
   }).toThrow(
-    new TypeError("Invalid scope: [ 'agent', 10 ]"))
-}
-
-/* ----------------------------------------------------------------------------
- * Definitions: .factory
- * ------------------------------------------------------------------------- */
-
-/* Test: .factory should return promise */
-function factoryShouldReturnPromise(done) {
-  expect(factory("factory")
-    .then(done)
-    .catch(done)
-  )
-    .toEqual(jasmine.any(Promise))
-}
-
-/* Test: .factory should use existing base directory */
-function factoryShouldUseExistingBaseDirectory(done) {
-  factory("factory")
-    .then(storage => {
-      expect(storage.base)
-        .toEqual("factory")
-      expect(fs.existsSync("factory"))
-        .toBe(true)
-      done()
-    })
-    .catch(done.fail)
-}
-
-/* Test: .factory should create non-existing base directory */
-function factoryShouldCreateNonExistingBaseDirectory(done) {
-  factory("genmaicha/sencha/bancha")
-    .then(storage => {
-      expect(storage.base)
-        .toEqual("genmaicha/sencha/bancha")
-      expect(fs.existsSync("genmaicha/sencha/bancha"))
-        .toBe(true)
-      done()
-    })
-    .catch(done.fail)
-}
-
-/* Test: .factory should reject on constructor error */
-function factoryShouldRejectOnConstructorError(done) {
-  factory(null)
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(jasmine.any(TypeError))
-      done()
-    })
+    new TypeError("Invalid suite name: null"))
 }

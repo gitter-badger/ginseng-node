@@ -1,5 +1,5 @@
 {
-  "name": "ginseng-connect",
+  "name": "ginseng-node",
   "version": "0.0.0",
   "description": "A connect middleware for Ginseng",
   "keywords": [
@@ -7,9 +7,9 @@
     "testing",
     "framework"
   ],
-  "homepage": "http://squidfunk.github.io/ginseng/",
+  "homepage": "http://ginseng.github.io/",
   "bugs": {
-    "url": "https://github.com/squidfunk/ginseng-connect/issues",
+    "url": "https://github.com/ginseng/ginseng-node/issues",
     "email": "martin.donath@squidfunk.com"
   },
   "license": "MIT",
@@ -20,7 +20,7 @@
   "contributors": [],
   "repository": {
     "type": "git",
-    "url": "https://github.com/squidfunk/ginseng-connect.git"
+    "url": "https://github.com/ginseng/ginseng-node.git"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -33,8 +33,10 @@
   "dependencies": {
     "body-parser": "^1.17.1",
     "deepmerge": "^1.3.2",
+    "finalhandler": "^1.0.3",
     "jsonfile": "^3.0.0",
     "jsonschema": "^1.1.1",
+    "minimatch": "^3.0.4",
     "mkdirp-promise": "^5.0.1",
     "router": "^1.3.0",
     "useragent": "^2.1.13"

@@ -23,45 +23,41 @@
 import httpMocks from "node-mocks-http"
 import useragent from "useragent"
 
-import {
-  default as factory
-} from "~/src/middlewares/scope"
+import factory from "~/src/middlewares/scope"
 
 /* ----------------------------------------------------------------------------
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* Middleware.scope */
-describe("Middleware.scope", () => {
+/* middleware/scope */
+describe("middleware/scope", () => {
 
   /* Register spies */
   beforeEach(() => {
     spyOn(useragent, "parse")
       .and.returnValue({
         toJSON: () => ({
-          agent: {
 
-            /* Agent information */
-            family: "Agent",
-            major: 1,
-            minor: 2,
-            patch: 3,
+          /* Agent information */
+          family: "Agent",
+          major: 1,
+          minor: 2,
+          patch: 3,
 
-            /* Operating system information */
-            os: {
-              family: "Operating System",
-              major: 4,
-              minor: 5,
-              patch: 6
-            },
+          /* Operating system information */
+          os: {
+            family: "Operating System",
+            major: 4,
+            minor: 5,
+            patch: 6
+          },
 
-            /* Device information */
-            device: {
-              family: "Device",
-              major: 7,
-              minor: 8,
-              patch: 9
-            }
+          /* Device information */
+          device: {
+            family: "Device",
+            major: 7,
+            minor: 8,
+            patch: 9
           }
         })
       })
@@ -92,7 +88,7 @@ describe("Middleware.scope", () => {
     defaultShouldAcceptEmptyScope
   )
 
-  /* Test: should multiple scopes */
+  /* Test: should accept multiple scopes */
   it("should accept multiple scopes",
     defaultShouldAcceptMultipleScopes
   )
@@ -124,7 +120,10 @@ describe("Middleware.scope", () => {
 
 /* Test: .default should return connect-compatible middleware */
 function defaultShouldReturnConnectCompatibleMiddleware() {
-  expect(factory().length)
+  const middleware = factory()
+  expect(middleware)
+    .toEqual(jasmine.any(Function))
+  expect(middleware.length)
     .toEqual(3)
 }
 
@@ -143,7 +142,7 @@ function defaultShouldExtractAgent() {
   ])
   handler(req, res, next)
   expect(req.scope)
-    .toEqual(["Agent 3.2.1"])
+    .toEqual("Agent 3.2.1")
   expect(next)
     .toHaveBeenCalled()
 }
@@ -163,7 +162,7 @@ function defaultShouldExtractOperatingSystem() {
   ])
   handler(req, res, next)
   expect(req.scope)
-    .toEqual(["Operating System 6.5.4"])
+    .toEqual("Operating System 6.5.4")
   expect(next)
     .toHaveBeenCalled()
 }
@@ -183,7 +182,7 @@ function defaultShouldExtractDevice() {
   ])
   handler(req, res, next)
   expect(req.scope)
-    .toEqual(["Device 9.8.7"])
+    .toEqual("Device 9.8.7")
   expect(next)
     .toHaveBeenCalled()
 }
@@ -198,7 +197,7 @@ function defaultShouldAcceptEmptyScope() {
   const handler = factory()
   handler(req, res, next)
   expect(req.scope)
-    .toEqual([])
+    .toEqual("")
   expect(next)
     .toHaveBeenCalled()
 }
@@ -217,16 +216,16 @@ function defaultShouldAcceptMultipleScopes() {
     },
     {
       type: "os",
-      version: ["patch", "minor", "major"]
+      version: ["minor", "major"]
     },
     {
       type: "device",
-      version: ["patch", "minor", "major"]
+      version: ["major"]
     }
   ])
   handler(req, res, next)
   expect(req.scope)
-    .toEqual(["Agent 3.2.1", "Operating System 6.5.4", "Device 9.8.7"])
+    .toEqual("Agent 3.2.1/Operating System 5.4/Device 7")
   expect(next)
     .toHaveBeenCalled()
 }

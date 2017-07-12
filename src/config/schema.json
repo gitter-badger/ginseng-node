@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required" : [
+    "scope",
+    "stages"
+  ],
+  "properties": {
+    "scope": {
+      "description": "Scope specification",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "version"
+        ],
+        "properties": {
+          "type": {
+            "description": "Scope type",
+            "type": "string",
+            "enum": [
+              "agent",
+              "os",
+              "device"
+            ]
+          },
+          "version": {
+            "description": "Scope granularity",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "major",
+                "minor",
+                "patch"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "stages": {
+      "description": "Stage specification",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "storage"
+        ],
+        "properties": {
+          "name": {
+            "description": "Stage name",
+            "type": "string"
+          },
+          "storage": {
+            "description": "Stage storage",
+            "type": "object",
+            "required": [
+              "type",
+              "args"
+            ],
+            "properties": {
+              "type": {
+                "description": "Storage type",
+                "type": "string",
+                "enum": [
+                  "filesystem"
+                ]
+              },
+              "args": {
+                "description": "Storage arguments",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
