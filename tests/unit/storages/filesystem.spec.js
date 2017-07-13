@@ -298,15 +298,25 @@ describe("storages/FileSystem", () => {
       storeShouldRejectOnInvalidData
     )
 
-    /* Test: should reject on invalid contents */
-    it("should reject on invalid contents",
-      storeShouldRejectOnInvalidContents
+    /* Test: should reject on invalid specification */
+    it("should reject on invalid specification",
+      storeShouldRejectOnInvalidSpecification
     )
 
-    /* Test: should reject on invalid nested contents */
-    it("should reject on invalid nested contents",
-      storeShouldRejectOnInvalidNestedContents
+    /* Test: should reject on invalid nested specification */
+    it("should reject on invalid nested specification",
+      storeShouldRejectOnInvalidNestedSpecification
     )
+
+    // /* Test: should reject on invalid contents */
+    // it("should reject on invalid contents",
+    //   storeShouldRejectOnInvalidContents
+    // )
+    //
+    // /* Test: should reject on invalid nested contents */
+    // it("should reject on invalid nested contents",
+    //   storeShouldRejectOnInvalidNestedContents
+    // )
 
     /* Test: should reject on failed write */
     it("should reject on failed write",
@@ -796,16 +806,28 @@ function storeShouldRejectOnInvalidData(done) {
     })
 }
 
-/* Test: #store should reject on invalid contents */
-function storeShouldRejectOnInvalidContents(done) {
+/* Test: #store should reject on invalid specification */
+function storeShouldRejectOnInvalidSpecification(done) {
   new FileSystemStorage("store").store("genmaicha", {
     specs: {
-      oolong: { data: true }
-    },
+      oolong: "invalid"
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid specification: 'invalid'"))
+      done()
+    })
+}
+
+/* Test: #store should reject on invalid nested specification */
+function storeShouldRejectOnInvalidNestedSpecification(done) {
+  new FileSystemStorage("store").store("genmaicha", {
     suites: {
-      sencha: {
+      oolong: {
         specs: {
-          bancha: "invalid"
+          sencha: "invalid"
         }
       }
     }
@@ -813,29 +835,51 @@ function storeShouldRejectOnInvalidContents(done) {
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid contents: 'invalid'"))
+        .toEqual(new TypeError("Invalid specification: 'invalid'"))
       done()
     })
 }
 
-/* Test: #store should reject on invalid nested contents */
-function storeShouldRejectOnInvalidNestedContents(done) {
-  pending("This test breaks in Travis with \"Error: this socket is closed\"")
-  new FileSystemStorage("store").store("genmaicha", {
-    specs: {
-      oolong: { data: true }
-    },
-    suites: {
-      sencha: "invalid"
-    }
-  })
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(new TypeError("Invalid contents: 'invalid'"))
-      done()
-    })
-}
+// /* Test: #store should reject on invalid contents */
+// function storeShouldRejectOnInvalidContents(done) {
+//   new FileSystemStorage("store").store("genmaicha", {
+//     specs: {
+//       oolong: { data: true }
+//     },
+//     suites: {
+//       sencha: {
+//         specs: {
+//           bancha: "invalid"
+//         }
+//       }
+//     }
+//   })
+//     .then(done.fail)
+//     .catch(err => {
+//       expect(err)
+//         .toEqual(new TypeError("Invalid contents: 'invalid'"))
+//       done()
+//     })
+// }
+//
+// /* Test: #store should reject on invalid nested contents */
+// function storeShouldRejectOnInvalidNestedContents(done) {
+//   pending("This test breaks in Travis with \"Error: this socket is closed\"")
+//   new FileSystemStorage("store").store("genmaicha", {
+//     specs: {
+//       oolong: { data: true }
+//     },
+//     suites: {
+//       sencha: "invalid"
+//     }
+//   })
+//     .then(done.fail)
+//     .catch(err => {
+//       expect(err)
+//         .toEqual(new TypeError("Invalid contents: 'invalid'"))
+//       done()
+//     })
+// }
 
 /* Test: #store should reject on failed write */
 function storeShouldRejectOnFailedWrite(done) {

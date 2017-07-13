@@ -221,7 +221,7 @@ export default class FileSystemStorage extends AbstractStorage {
             return new Promise((resolveSpec, rejectSpec) => {
               if (typeof data.specs[name] !== "object")
                 return rejectSpec(new TypeError(
-                  `Invalid contents: ${inspect(data.specs[name])}`))
+                  `Invalid specification: ${inspect(data.specs[name])}`))
 
               /* Serialize data and write to file */
               const file = path.join(directory, `${name}.json`)
@@ -237,7 +237,7 @@ export default class FileSystemStorage extends AbstractStorage {
           ...Object.keys(data.suites || {}).map(name => {
             if (typeof data.suites[name] !== "object")
               return Promise.reject(new TypeError(
-                `Invalid contents: ${inspect(data.suites[name])}`))
+                `Invalid suite: ${inspect(data.suites[name])}`))
 
             /* Recurse on nested suite */
             return this.store(path.join(suite, name), data.suites[name])
