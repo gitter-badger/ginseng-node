@@ -21,8 +21,8 @@
  */
 
 import finalhandler from "finalhandler"
-import { inspect } from "util"
 import { validate } from "jsonschema"
+import { inspect } from "util"
 
 import Router from "router"
 

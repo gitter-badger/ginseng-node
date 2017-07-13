@@ -253,6 +253,7 @@ describe("storages/FileSystem", () => {
 
   /* #store */
   describe("#store", () => {
+    pending()
 
     /* Register spies and mocks */
     beforeEach(() => {
