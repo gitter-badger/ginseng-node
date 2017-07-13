@@ -821,7 +821,6 @@ function storeShouldRejectOnInvalidContents(done) {
 
 /* Test: #store should reject on invalid nested contents */
 function storeShouldRejectOnInvalidNestedContents(done) {
-  pending()
   new FileSystemStorage("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
