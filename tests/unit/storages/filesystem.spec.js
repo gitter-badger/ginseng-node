@@ -308,6 +308,16 @@ describe("storages/FileSystem", () => {
       storeShouldRejectOnInvalidNestedSpecification
     )
 
+    /* Test: should reject on invalid suite */
+    it("should reject on invalid suite",
+      storeShouldRejectOnInvalidSuite
+    )
+
+    /* Test: should reject on invalid nested suite */
+    it("should reject on invalid nested suite",
+      storeShouldRejectOnInvalidNestedSuite
+    )
+
     // /* Test: should reject on invalid contents */
     // it("should reject on invalid contents",
     //   storeShouldRejectOnInvalidContents
@@ -836,6 +846,40 @@ function storeShouldRejectOnInvalidNestedSpecification(done) {
     .catch(err => {
       expect(err)
         .toEqual(new TypeError("Invalid specification: 'invalid'"))
+      done()
+    })
+}
+
+/* Test: #store should reject on invalid suite */
+function storeShouldRejectOnInvalidSuite(done) {
+  new FileSystemStorage("store").store("genmaicha", {
+    suites: {
+      oolong: "invalid"
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite: 'invalid'"))
+      done()
+    })
+}
+
+/* Test: #store should reject on invalid nested suite */
+function storeShouldRejectOnInvalidNestedSuite(done) {
+  new FileSystemStorage("store").store("genmaicha", {
+    suites: {
+      oolong: {
+        suites: {
+          sencha: "invalid"
+        }
+      }
+    }
+  })
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite: 'invalid'"))
       done()
     })
 }
