@@ -829,8 +829,12 @@ function storeShouldRejectOnInvalidNestedContents(done) {
       sencha: "invalid"
     }
   })
-    .then(done.fail)
+    .then(x => {
+      console.log("RESOLVE: " + x) // eslint-disable-line
+      done.fail()
+    })
     .catch(err => {
+      console.log("REJECT: " + err) // eslint-disable-line
       expect(err)
         .toEqual(
         new TypeError("Invalid contents: 'invalid'"))
