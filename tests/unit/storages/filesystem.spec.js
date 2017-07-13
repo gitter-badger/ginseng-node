@@ -253,7 +253,6 @@ describe("storages/FileSystem", () => {
 
   /* #store */
   describe("#store", () => {
-    pending()
 
     /* Register spies and mocks */
     beforeEach(() => {
@@ -822,6 +821,7 @@ function storeShouldRejectOnInvalidContents(done) {
 
 /* Test: #store should reject on invalid nested contents */
 function storeShouldRejectOnInvalidNestedContents(done) {
+  pending()
   new FileSystemStorage("store").store("genmaicha", {
     specs: {
       oolong: { data: true }
@@ -841,6 +841,7 @@ function storeShouldRejectOnInvalidNestedContents(done) {
 
 /* Test: #store should reject on failed write */
 function storeShouldRejectOnFailedWrite(done) {
+  pending()
   spyOn(json, "writeFile")
     // eslint-disable-next-line max-params
     .and.callFake((file, data, options, cb) => {
