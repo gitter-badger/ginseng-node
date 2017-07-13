@@ -87,6 +87,7 @@ export default class Ginseng {
 
     /* Register error handler and return middleware */
     router.use(errorMiddleware())
+    /* istanbul ignore next: tested via smoke test */
     return (req, res) => {
       router(req, res, finalhandler(req, res))
     }
@@ -103,6 +104,14 @@ export default class Ginseng {
    */
   update(name, suite = null, options = {}) {
     return new Promise((resolve, reject) => {
+      if (typeof name !== "string" || !name.length)
+        return reject(new TypeError(`Invalid stage name: ${inspect(name)}`))
+      if (suite !== null && (typeof suite !== "string" || !suite.length))
+        return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
+      if (typeof options !== "object")
+        return reject(new TypeError(`Invalid options: ${inspect(options)}`))
+
+      /* Find index of given stage */
       const index = this.config_.stages.findIndex(stage => stage.name === name)
       if (index === -1)
         return reject(new ReferenceError(

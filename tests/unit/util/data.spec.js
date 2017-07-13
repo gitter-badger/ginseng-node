@@ -29,8 +29,8 @@ import {
  * Declarations
  * ------------------------------------------------------------------------- */
 
-/* util */
-describe("util", () => {
+/* util/data */
+describe("util/data", () => {
 
   /* Setup fixtures */
   beforeEach(function() {

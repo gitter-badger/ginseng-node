@@ -235,9 +235,9 @@ describe("storages/FileSystem", () => {
       fetchShouldRejectOnInvalidSuiteName
     )
 
-    /* Test: should reject on invalid contents */
-    it("should reject on invalid contents",
-      fetchShouldRejectOnInvalidContents
+    /* Test: should reject on invalid specification */
+    it("should reject on invalid specification",
+      fetchShouldRejectOnInvalidSpecification
     )
 
     /* Test: should reject on non-existing suite */
@@ -317,16 +317,6 @@ describe("storages/FileSystem", () => {
     it("should reject on invalid nested suite",
       storeShouldRejectOnInvalidNestedSuite
     )
-
-    // /* Test: should reject on invalid contents */
-    // it("should reject on invalid contents",
-    //   storeShouldRejectOnInvalidContents
-    // )
-    //
-    // /* Test: should reject on invalid nested contents */
-    // it("should reject on invalid nested contents",
-    //   storeShouldRejectOnInvalidNestedContents
-    // )
 
     /* Test: should reject on failed write */
     it("should reject on failed write",
@@ -487,7 +477,7 @@ function inrangeShouldFailOnReservedCharacters() {
 
 /* Test: .factory should return promise */
 function factoryShouldReturnPromise(done) {
-  expect(FileSystemStorage.factory("factory")
+  expect(FileSystemStorage.factory()
     .then(done)
     .catch(done)
   ).toEqual(jasmine.any(Promise))
@@ -685,8 +675,8 @@ function fetchShouldRejectOnInvalidSuiteName(done) {
     })
 }
 
-/* Test: #fetch should reject on invalid contents */
-function fetchShouldRejectOnInvalidContents(done) {
+/* Test: #fetch should reject on invalid specification */
+function fetchShouldRejectOnInvalidSpecification(done) {
   new FileSystemStorage("fetch").fetch("matcha")
     .then(done.fail)
     .catch(err => {
@@ -728,7 +718,7 @@ function fetchShouldRejectOnFailedStat(done) {
 
 /* Test: #store should return promise */
 function storeShouldReturnPromise(done) {
-  expect(new FileSystemStorage("store").store("genmaicha", {})
+  expect(new FileSystemStorage("store").store()
     .then(done)
     .catch(done)
   ).toEqual(jasmine.any(Promise))
@@ -884,47 +874,6 @@ function storeShouldRejectOnInvalidNestedSuite(done) {
     })
 }
 
-// /* Test: #store should reject on invalid contents */
-// function storeShouldRejectOnInvalidContents(done) {
-//   new FileSystemStorage("store").store("genmaicha", {
-//     specs: {
-//       oolong: { data: true }
-//     },
-//     suites: {
-//       sencha: {
-//         specs: {
-//           bancha: "invalid"
-//         }
-//       }
-//     }
-//   })
-//     .then(done.fail)
-//     .catch(err => {
-//       expect(err)
-//         .toEqual(new TypeError("Invalid contents: 'invalid'"))
-//       done()
-//     })
-// }
-//
-// /* Test: #store should reject on invalid nested contents */
-// function storeShouldRejectOnInvalidNestedContents(done) {
-//   pending("This test breaks in Travis with \"Error: this socket is closed\"")
-//   new FileSystemStorage("store").store("genmaicha", {
-//     specs: {
-//       oolong: { data: true }
-//     },
-//     suites: {
-//       sencha: "invalid"
-//     }
-//   })
-//     .then(done.fail)
-//     .catch(err => {
-//       expect(err)
-//         .toEqual(new TypeError("Invalid contents: 'invalid'"))
-//       done()
-//     })
-// }
-
 /* Test: #store should reject on failed write */
 function storeShouldRejectOnFailedWrite(done) {
   spyOn(json, "writeFile")
@@ -1036,7 +985,7 @@ function exportShouldRejectOnFailedStat(done) {
 
 /* Test: #import should return promise */
 function importShouldReturnPromise(done) {
-  expect(new FileSystemStorage("import").import({})
+  expect(new FileSystemStorage("import").import()
     .then(done)
     .catch(done)
   ).toEqual(jasmine.any(Promise))

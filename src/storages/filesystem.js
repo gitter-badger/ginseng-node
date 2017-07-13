@@ -205,11 +205,11 @@ export default class FileSystemStorage extends AbstractStorage {
         return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
       if (typeof data !== "object")
         return reject(new TypeError(`Invalid data: ${inspect(data)}`))
-      resolve()
+      resolve(path.join(this.base_, suite))
     })
 
       /* Ensure directory is present */
-      .then(() => mkdirp(path.join(this.base_, suite)))
+      .then(mkdirp)
 
       /* Write files asynchronously */
       .then(() => {

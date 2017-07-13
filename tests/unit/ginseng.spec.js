@@ -136,6 +136,56 @@ describe("Ginseng", () => {
       middlewareShouldThrowOnInvalidRouter
     )
   })
+
+  /* #update */
+  describe("#update", () => {
+
+    /* Register spies */
+    beforeEach(() => {
+      // spyOn(storageFactory, "default")
+      //   .and.returnValue(Promise.resolve())
+    })
+
+    /* Test: should return promise */
+    it("should return promise",
+      updateShouldReturnPromise
+    )
+
+    /* Test: should reject on empty stage name */
+    it("should reject on empty stage name",
+      updateShouldRejectOnEmptyStageName
+    )
+
+    /* Test: should reject on invalid stage name */
+    it("should reject on invalid stage name",
+      updateShouldRejectOnInvalidStageName
+    )
+
+    /* Test: should reject on empty suite name */
+    it("should reject on empty suite name",
+      updateShouldRejectOnEmptySuiteName
+    )
+
+    /* Test: should reject on invalid suite name */
+    it("should reject on invalid suite name",
+      updateShouldRejectOnInvalidSuiteName
+    )
+
+    /* Test: should reject on invalid options */
+    it("should reject on invalid options",
+      updateShouldRejectOnInvalidOptions
+    )
+
+    /* Test: should reject on non-existing stage */
+    it("should reject on non-existing stage",
+      updateShouldRejectOnNonExistingStage
+    )
+
+    /* Test: should reject on first stage */
+    it("should reject on first stage",
+      updateShouldRejectOnFirstStage
+    )
+  })
 })
 
 /* ----------------------------------------------------------------------------
@@ -248,4 +298,93 @@ function middlewareShouldThrowOnInvalidRouter() {
     new Ginseng(this.config).middleware({ router: "invalid" })
   }).toThrow(
     new TypeError("Invalid router: 'invalid'"))
+}
+
+/* ----------------------------------------------------------------------------
+ * Definitions: #update
+ * ------------------------------------------------------------------------- */
+
+/* Test: #update should return promise */
+function updateShouldReturnPromise(done) {
+  expect(new Ginseng(this.config).update()
+    .then(done)
+    .catch(done)
+  ).toEqual(jasmine.any(Promise))
+}
+
+/* Test: #update should reject on empty stage name */
+function updateShouldRejectOnEmptyStageName(done) {
+  new Ginseng(this.config).update("")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid stage name: ''"))
+      done()
+    })
+}
+
+/* Test: #update should reject on invalid stage name */
+function updateShouldRejectOnInvalidStageName(done) {
+  new Ginseng(this.config).update(null)
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid stage name: null"))
+      done()
+    })
+}
+
+/* Test: #update should reject on empty suite name */
+function updateShouldRejectOnEmptySuiteName(done) {
+  new Ginseng(this.config).update("genmaicha", "")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite name: ''"))
+      done()
+    })
+}
+
+/* Test: #update should reject on invalid suite name */
+function updateShouldRejectOnInvalidSuiteName(done) {
+  new Ginseng(this.config).update("genmaicha", {})
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid suite name: {}"))
+      done()
+    })
+}
+
+/* Test: #update should reject on invalid options */
+function updateShouldRejectOnInvalidOptions(done) {
+  new Ginseng(this.config).update("genmaicha", "sencha", "invalid")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new TypeError("Invalid options: 'invalid'"))
+      done()
+    })
+}
+
+/* Test: #update should reject on non-existing stage */
+function updateShouldRejectOnNonExistingStage(done) {
+  new Ginseng(this.config).update("invalid")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new ReferenceError("Invalid stage: 'invalid' not found"))
+      done()
+    })
+}
+
+/* Test: #update should reject on first stage */
+function updateShouldRejectOnFirstStage(done) {
+  new Ginseng(this.config).update("genmaicha")
+    .then(done.fail)
+    .catch(err => {
+      expect(err)
+        .toEqual(new ReferenceError("Invalid stage: cannot update first stage"))
+      done()
+    })
 }

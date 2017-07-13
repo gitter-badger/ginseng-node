@@ -20,43 +20,20 @@
  * IN THE SOFTWARE.
  */
 
-import { inspect } from "util"
-
-import FileSystemStorage from "./filesystem"
+import { middleware, default as Ginseng } from "./ginseng"
 
 /* ----------------------------------------------------------------------------
- * Factory
+ * Re-export entrypoint with ES5 compatibility
  * ------------------------------------------------------------------------- */
 
-/**
- * Available storages
- *
- * @type {Object<string, AbstractStorage}
- */
-const storages = {
-  filesystem: FileSystemStorage
-}
+// TODO: maybe fake .__esModules / .default, to be compatible with ES6,
+// but put Ginseng into top level namespace to work with ES5.
+module.exports = Ginseng
+// eslint-disable-next-line no-underscore-dangle
+Ginseng.__esModule = true
+Ginseng.default = Ginseng
 
-/* ----------------------------------------------------------------------------
- * Factory
- * ------------------------------------------------------------------------- */
+// export middleware
+Ginseng.middleware = middleware
 
-/**
- * Create a storage of given type
- *
- * @param {string} type - Storage type
- * @param {...*} args - Storage arguments
- *
- * @return {Promise<AbstractStorage>} Promise resolving with storage
- */
-export default (type, ...args) => {
-  return new Promise((resolve, reject) => {
-    if (typeof type !== "string" || !type.length || !storages[type])
-      return reject(new TypeError(`Invalid storage type: ${inspect(type)}`))
-
-    /* Load and initialize storage */
-    storages[type].factory(...args)
-      .then(resolve)
-      .catch(reject)
-  })
-}
+// universal ES5/ES6 export?

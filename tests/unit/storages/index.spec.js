@@ -25,50 +25,23 @@ import requireMock from "mock-require"
 
 import factory from "~/src/storages"
 
+import FileSystemStorage from "~/src/storages/filesystem"
+
 /* ----------------------------------------------------------------------------
  * Declarations
  * ------------------------------------------------------------------------- */
 
 /* storages */
 describe("storages", () => {
-  pending("Storage tests must be reworked due to changed implementation")
-
-  /* Register spies and mocks */
-  beforeEach(() => {
-    requireMock(path.resolve("src/storages/resolve"), {
-      factory: jasmine.createSpy("factory")
-        .and.callFake(() => Promise.resolve("succeed"))
-    })
-    requireMock(path.resolve("src/storages/reject"), {
-      factory: jasmine.createSpy("factory")
-        .and.callFake(() => Promise.reject("fail"))
-    })
-    requireMock(path.resolve("src/storages/error"), {
-      factory: jasmine.createSpy("factory")
-        .and.callFake(() => {
-          throw new Error
-        })
-    })
-  })
 
   /* Test: should return promise */
   it("should return promise",
     defaultShouldReturnPromise
   )
 
-  /* Test: should prepend directory if relative */
-  it("should prepend directory if relative",
-    defaultShouldPrependDirectoryIfRelative
-  )
-
-  /* Test: should not prepend directory if absolute */
-  it("should not prepend directory if absolute",
-    defaultShouldNotPrependDirectoryIfAbsolute
-  )
-
-  /* Test: should resolve with storage */
-  it("should resolve with storage",
-    defaultShouldResolveWithStorage
+  /* Test: should resolve with filesystem storage */
+  it("should resolve with filesystem storage",
+    defaultShouldResolveWithFileSystemStorage
   )
 
   /* Test: should reject on empty storavge type */
@@ -104,38 +77,12 @@ function defaultShouldReturnPromise(done) {
   ).toEqual(jasmine.any(Promise))
 }
 
-/* Test: .default should prepend directory if relative */
-function defaultShouldPrependDirectoryIfRelative(done) {
-  factory("fail/relative")
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(new Error(
-          `Cannot find module '${path.resolve("src/storages/fail/relative")}'`
-        ))
-      done()
-    })
-}
-
-/* Test: .default should not prepend directory if absolute */
-function defaultShouldNotPrependDirectoryIfAbsolute(done) {
-  factory("/fail/absolute")
-    .then(done.fail)
-    .catch(err => {
-      expect(err)
-        .toEqual(new Error(
-          `Cannot find module '${path.resolve("/fail/absolute")}'`
-        ))
-      done()
-    })
-}
-
-/* Test: .default should resolve with storage */
-function defaultShouldResolveWithStorage(done) {
-  factory("resolve")
+/* Test: .default should resolve with filesystem storage */
+function defaultShouldResolveWithFileSystemStorage(done) {
+  factory("filesystem", ".")
     .then(storage => {
       expect(storage)
-        .toEqual("succeed")
+        .toEqual(jasmine.any(FileSystemStorage))
       done()
     })
     .catch(done.fail)
@@ -147,7 +94,7 @@ function defaultShouldRejectOnEmptyStorageType(done) {
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid type: ''"))
+        .toEqual(new TypeError("Invalid storage type: ''"))
       done()
     })
 }
@@ -158,25 +105,25 @@ function defaultShouldRejectOnInvalidStorageType(done) {
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual(new TypeError("Invalid type: null"))
+        .toEqual(new TypeError("Invalid storage type: null"))
       done()
     })
 }
 
 /* Test: .default should reject on non-existing storage */
 function defaultShouldRejectOnNonExistingStorage(done) {
-  factory("reject")
+  factory("invalid")
     .then(done.fail)
     .catch(err => {
       expect(err)
-        .toEqual("fail")
+        .toEqual(new TypeError("Invalid storage type: 'invalid'"))
       done()
     })
 }
 
 /* Test: .default should reject on storage error */
 function defaultShouldRejectOnStorageError(done) {
-  factory("error")
+  factory("filesystem")
     .then(done.fail)
     .catch(err => {
       expect(err)
