@@ -20,9 +20,6 @@
  * IN THE SOFTWARE.
  */
 
-import path from "path"
-import requireMock from "mock-require"
-
 import factory from "~/src/storages"
 
 import FileSystemStorage from "~/src/storages/filesystem"
