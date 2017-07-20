@@ -21,6 +21,7 @@
  */
 
 import finalhandler from "finalhandler"
+import path from "path"
 import { validate } from "jsonschema"
 import { inspect } from "util"
 
@@ -50,10 +51,10 @@ export default class Ginseng {
    *
    * @param {Object} [config] - Configuration
    */
-  constructor(config = CONFIG_DEFAULT) {
-    if (typeof config !== "object")
+  constructor(config = null) {
+    if (config !== null && typeof config !== "object")
       throw new TypeError(`Invalid config: ${inspect(config)}`)
-    this.config_ = config
+    this.config_ = config || CONFIG_DEFAULT
 
     /* Validate schema and throw on first error */
     const result = validate(this.config_, CONFIG_SCHEMA)
@@ -102,11 +103,11 @@ export default class Ginseng {
    *
    * @return {Promise<void>} Promise resolving with no result
    */
-  update(name, suite = null, options = {}) {
+  update(name, suite = "*", options = {}) {
     return new Promise((resolve, reject) => {
       if (typeof name !== "string" || !name.length)
         return reject(new TypeError(`Invalid stage name: ${inspect(name)}`))
-      if (suite !== null && (typeof suite !== "string" || !suite.length))
+      if (suite !== "*" && (typeof suite !== "string" || !suite.length))
         return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
       if (typeof options !== "object")
         return reject(new TypeError(`Invalid options: ${inspect(options)}`))
@@ -120,27 +121,24 @@ export default class Ginseng {
         return reject(new ReferenceError(
           "Invalid stage: cannot update first stage"))
 
+      /* If no scope was given, prepend a matching number of "*" */
+      const scope = options.scope
+        ? options.scope
+        : new Array(this.config_.scope.length).fill("*").join("/")
+
       /* Load and initialize stages */
-      Promise.all([index - 1, index].map(s => {
-        return new Promise((resolveStage, rejectStage) => {
-          const stage = this.config_.stages[s]
-          return storageFactory(stage.storage.type, ...stage.storage.args)
-            .then(resolveStage)
-            .catch(rejectStage)
-        })
-      }))
+      Promise.all([index - 1, index]
+        .map(s => this.config_.stages[s])
+        .map(stage =>
+          storageFactory(stage.storage.type, ...stage.storage.args))
+      )
 
         /* Update target stage with data from source stage */
         .then(([source, target]) => {
           return source.export()
-            .then(data => target.import([
-              ...options.scope
-                ? [{ pattern: options.scope }]
-                : [],
-              ...suite
-                ? [{ pattern: suite, skip: this.config_.scope.length }]
-                : []
-            ].reduce(filter, data)))
+            .then(data => target.import(
+              filter(data, { pattern: path.join(scope, suite) })
+            ))
         })
 
         /* Resolve with no result */

@@ -106,11 +106,6 @@ describe("util/data", () => {
     it("should include suite on nested suite ending with pattern",
       filterShouldIncludeSuiteOnNestedSuiteEndingWithPattern
     )
-
-    /* Test: should include skipped level on suite matching pattern */
-    it("should include skipped level on suite matching pattern",
-      filterShouldIncludeSkippedLevelOnSuiteMatchingPattern
-    )
   })
 
   /* .names */
@@ -190,21 +185,6 @@ function filterShouldIncludeSuiteOnNestedSuiteStartingWithPattern() {
 /* Test: .filter should include suite on nested suite starting with pattern */
 function filterShouldIncludeSuiteOnNestedSuiteEndingWithPattern() {
   const data = filter(this.data, { pattern: "*/*long" })
-  expect(Object.keys(data.suites).length)
-    .toEqual(2)
-  expect(data.suites.genmaicha)
-    .toEqual(this.data.suites.genmaicha)
-  expect(data.suites.genmaicha.suites.oolong)
-    .toEqual(this.data.suites.genmaicha.suites.oolong)
-  expect(data.suites.sencha.suites.oolong)
-    .toEqual(this.data.suites.sencha.suites.oolong)
-  expect(data.suites.sencha.suites.matcha)
-    .toBeUndefined()
-}
-
-/* Test: .filter should include skipped level on suite matching pattern */
-function filterShouldIncludeSkippedLevelOnSuiteMatchingPattern() {
-  const data = filter(this.data, { pattern: "oo*", skip: 1 })
   expect(Object.keys(data.suites).length)
     .toEqual(2)
   expect(data.suites.genmaicha)

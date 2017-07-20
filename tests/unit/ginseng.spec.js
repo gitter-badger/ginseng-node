@@ -26,6 +26,7 @@ import * as errorMiddleware from "~/src/middlewares/error"
 import * as scopeMiddleware from "~/src/middlewares/scope"
 import * as stageMiddleware from "~/src/middlewares/stage"
 import * as storageFactory from "~/src/storages"
+import * as data from "~/src/util/data"
 
 import Ginseng from "~/src/ginseng"
 
@@ -39,7 +40,12 @@ describe("Ginseng", () => {
   /* Initialize configuration */
   beforeAll(function() {
     this.config = {
-      "scope": [],
+      "scope": [
+        {
+          "type": "agent",
+          "version": ["major", "minor", "patch"]
+        }
+      ],
       "stages": [
         {
           "name": "genmaicha",
@@ -141,14 +147,36 @@ describe("Ginseng", () => {
   describe("#update", () => {
 
     /* Register spies */
-    beforeEach(() => {
-      // spyOn(storageFactory, "default")
-      //   .and.returnValue(Promise.resolve())
+    beforeEach(function() {
+      this.storage = {
+        export: jasmine.createSpy("export")
+          .and.returnValue(Promise.resolve({ data: true })),
+        import: jasmine.createSpy("import")
+      }
+      spyOn(storageFactory, "default")
+        .and.returnValue(Promise.resolve(this.storage))
+      spyOn(data, "filter")
+        .and.callFake(data_ => data_)
     })
 
     /* Test: should return promise */
     it("should return promise",
       updateShouldReturnPromise
+    )
+
+    /* Test: should transfer data */
+    it("should transfer data",
+      updateShouldTransferData
+    )
+
+    /* Test: should filter suite */
+    it("should filter suite",
+      updateShouldFilterSuite
+    )
+
+    /* Test: should filter scope */
+    it("should filter scope",
+      updateShouldFilterScope
     )
 
     /* Test: should reject on empty stage name */
@@ -309,6 +337,48 @@ function updateShouldReturnPromise(done) {
   expect(new Ginseng(this.config).update()
     .then(done)
     .catch(done)
+  ).toEqual(jasmine.any(Promise))
+}
+
+/* Test: #update should transfer data */
+function updateShouldTransferData(done) {
+  expect(new Ginseng(this.config).update("oolong")
+    .then(() => {
+      expect(this.storage.export)
+        .toHaveBeenCalledWith()
+      expect(this.storage.import)
+        .toHaveBeenCalledWith({ data: true })
+      done()
+    })
+    .catch(done.fail)
+  ).toEqual(jasmine.any(Promise))
+}
+
+/* Test: #update should filter suite */
+function updateShouldFilterSuite(done) {
+  expect(new Ginseng(this.config).update("oolong", "*/sencha")
+    .then(() => {
+      expect(data.filter)
+        .toHaveBeenCalledWith({ data: true }, { pattern: "*/*/sencha" })
+      expect(data.filter.calls.count())
+        .toEqual(1)
+      done()
+    })
+    .catch(done.fail)
+  ).toEqual(jasmine.any(Promise))
+}
+
+/* Test: #update should filter scope */
+function updateShouldFilterScope(done) {
+  expect(new Ginseng(this.config).update("oolong", "*", { scope: "matcha" })
+    .then(() => {
+      expect(data.filter)
+        .toHaveBeenCalledWith({ data: true }, { pattern: "matcha/*" })
+      expect(data.filter.calls.count())
+        .toEqual(1)
+      done()
+    })
+    .catch(done.fail)
   ).toEqual(jasmine.any(Promise))
 }
 

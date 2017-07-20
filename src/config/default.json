@@ -2,11 +2,11 @@
   "scope": [
     {
       "type": "agent",
-      "version": ["major"]
+      "version": ["major", "minor", "patch"]
     },
     {
       "type": "os",
-      "version": ["major"]
+      "version": ["major", "minor", "patch"]
     }
   ],
   "stages": [

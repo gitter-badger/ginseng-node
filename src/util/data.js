@@ -33,7 +33,6 @@ import path from "path"
  * @param {Object} data - Specifications and nested suites
  * @param {Object} options - Options
  * @param {string} options.pattern - Pattern for filtering
- * @param {number} [options.skip] - Layers to skip
  * @param {Array<string>} [base] - Base path
  *
  * @return {Object} Filtered specifications and nested suites
@@ -42,20 +41,8 @@ export const filter = (data, options, base = []) => {
   return {
     suites: Object.keys(data.suites || {}).reduce((suites, name) => {
       const file = path.join(...base, name)
-
-      /* Skip this layer */
-      if (options.skip) {
-        const nested = filter(data.suites[name], {
-          ...options, skip: options.skip - 1
-        })
-        return Object.keys(nested.suites).length > 0
-          ? { ...suites, [name]: nested }
-          : suites
-
-      /* Return suites if pattern matches */
-      } else if (minimatch(file, options.pattern, { nocase: true })) {
+      if (minimatch(file, options.pattern, { nocase: true }))
         return { ...suites, [name]: data.suites[name] }
-      }
 
       /* Try next layer, if pattern didn't match */
       const nested = filter(data.suites[name], options, [...base, name])
