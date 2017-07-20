@@ -44,6 +44,10 @@ describe("Ginseng", () => {
         {
           "type": "agent",
           "version": ["major", "minor", "patch"]
+        },
+        {
+          "type": "os",
+          "version": ["major", "minor", "patch"]
         }
       ],
       "stages": [
@@ -169,14 +173,24 @@ describe("Ginseng", () => {
       updateShouldTransferData
     )
 
+    /* Test: should filter scope */
+    it("should filter scope",
+      updateShouldFilterScope
+    )
+
+    /* Test: should filter nested scope */
+    it("should filter nested scope",
+      updateShouldFilterNestedScope
+    )
+
     /* Test: should filter suite */
     it("should filter suite",
       updateShouldFilterSuite
     )
 
-    /* Test: should filter scope */
-    it("should filter scope",
-      updateShouldFilterScope
+    /* Test: should filter nested suite */
+    it("should filter nested suite",
+      updateShouldFilterNestedSuite
     )
 
     /* Test: should reject on empty stage name */
@@ -354,9 +368,41 @@ function updateShouldTransferData(done) {
   ).toEqual(jasmine.any(Promise))
 }
 
+/* Test: #update should filter scope */
+function updateShouldFilterScope(done) {
+  expect(new Ginseng(this.config).update("oolong", "*", {
+    scope: "matcha/hojicha"
+  })
+    .then(() => {
+      expect(data.filter)
+        .toHaveBeenCalledWith({ data: true }, { pattern: "matcha/hojicha/*" })
+      expect(data.filter.calls.count())
+        .toEqual(1)
+      done()
+    })
+    .catch(done.fail)
+  ).toEqual(jasmine.any(Promise))
+}
+
+/* Test: #update should filter nested scope */
+function updateShouldFilterNestedScope(done) {
+  expect(new Ginseng(this.config).update("oolong", "sencha", {
+    scope: "matcha"
+  })
+    .then(() => {
+      expect(data.filter)
+        .toHaveBeenCalledWith({ data: true }, { pattern: "matcha/*/sencha" })
+      expect(data.filter.calls.count())
+        .toEqual(1)
+      done()
+    })
+    .catch(done.fail)
+  ).toEqual(jasmine.any(Promise))
+}
+
 /* Test: #update should filter suite */
 function updateShouldFilterSuite(done) {
-  expect(new Ginseng(this.config).update("oolong", "*/sencha")
+  expect(new Ginseng(this.config).update("oolong", "sencha")
     .then(() => {
       expect(data.filter)
         .toHaveBeenCalledWith({ data: true }, { pattern: "*/*/sencha" })
@@ -368,12 +414,12 @@ function updateShouldFilterSuite(done) {
   ).toEqual(jasmine.any(Promise))
 }
 
-/* Test: #update should filter scope */
-function updateShouldFilterScope(done) {
-  expect(new Ginseng(this.config).update("oolong", "*", { scope: "matcha" })
+/* Test: #update should filter nested suite */
+function updateShouldFilterNestedSuite(done) {
+  expect(new Ginseng(this.config).update("oolong", "sencha/*")
     .then(() => {
       expect(data.filter)
-        .toHaveBeenCalledWith({ data: true }, { pattern: "matcha/*" })
+        .toHaveBeenCalledWith({ data: true }, { pattern: "*/*/sencha/*" })
       expect(data.filter.calls.count())
         .toEqual(1)
       done()

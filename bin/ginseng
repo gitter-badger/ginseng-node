@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
  * Copyright (c) 2017 Martin Donath <martin.donath@squidfunk.com>
  *
@@ -20,10 +22,4 @@
  * IN THE SOFTWARE.
  */
 
-import Ginseng from "./ginseng"
-
-/* ----------------------------------------------------------------------------
- * Entrypoint
- * ------------------------------------------------------------------------- */
-
-module.exports = Ginseng
+require("../dist/cli.js")

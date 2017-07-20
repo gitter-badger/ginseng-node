@@ -21,6 +21,7 @@
  */
 
 import finalhandler from "finalhandler"
+import morgan from "morgan"
 import path from "path"
 import { validate } from "jsonschema"
 import { inspect } from "util"
@@ -67,6 +68,7 @@ export default class Ginseng {
    *
    * @param {Object} [options={}] - Options
    * @param {Router} [options.router] - Router reference, if given
+   * @param {(string|Function|Boolean)} [options.morgan] - Morgan configuration
    *
    * @return {Function} Connect-compatible middleware
    */
@@ -76,9 +78,13 @@ export default class Ginseng {
     if (options.router && !(options.router instanceof Router))
       throw new TypeError(`Invalid router: ${inspect(options.router)}`)
 
-    /* Create router and register scope handler */
+    /* Create router and register scope middleware */
     const router = options.router || new Router()
     router.use(scopeMiddleware(this.config_.scope))
+
+    /* Configure morgan logger */
+    if (options.morgan !== false)
+      router.use(morgan(options.morgan || "dev"))                               // TODO: implement custom logger
 
     /* Register a route for each stage */
     this.config_.stages.forEach(stage =>
@@ -121,12 +127,9 @@ export default class Ginseng {
         return reject(new ReferenceError(
           "Invalid stage: cannot update first stage"))
 
-      /* If no scope was given, prepend a matching number of "*" */
-      const scope = options.scope
-        ? options.scope
-        : new Array(this.config_.scope.length)
-            .fill("*")
-            .join("/")
+      /* Expand scope with "*" */
+      const scope = options.scope || "*"
+      const count = this.config_.scope.length - scope.split("/").length
 
       /* Load and initialize stages */
       Promise.all([index - 1, index]
@@ -139,7 +142,9 @@ export default class Ginseng {
         .then(([source, target]) => {
           return source.export()
             .then(data => target.import(
-              filter(data, { pattern: path.join(scope, suite) })
+              filter(data, {
+                pattern: path.join(scope, "/*".repeat(count), suite)
+              })
             ))
         })
 
