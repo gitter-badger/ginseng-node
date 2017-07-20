@@ -36,6 +36,11 @@ fi
 # Build library
 "$(npm bin)"/babel src --out-dir dist --copy-files
 
+# Pretty-print code
+for file in $(find dist -name "*.js"); do
+  "$(npm bin)"/uglifyjs $file --beautify indent_level=2 --output $file
+done
+
 # Start test runner
 "$(npm bin)"/cross-env NODE_ENV=test \
   "$(npm bin)"/nyc --reporter=lcov \

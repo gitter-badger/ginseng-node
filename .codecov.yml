@@ -18,35 +18,43 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-# macOS internals
-.DS_Store
+coverage:
 
-# NPM
-/node_modules
-/npm-debug.log*
-/yarn-error.log
-yarn.lock
+  # Coverage status
+  status:
 
-# Source files
-/scripts
-/src
-/tests
+    # Overall project status
+    project:
+      default:
+        enabled: yes
+        target: auto
+        threshold: 1%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
 
-# Coverage reports
-/.nyc_output
-/coverage
+    # Pull request coverage diff
+    patch:
+      default:
+        enabled: yes
+        target: 95%
+        threshold: 1%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
 
-# Configuration
-.babelrc
-.codecov.yml
-.editorconfig
-.eslintignore
-.eslintrc
-.gitignore
-.npmignore
-.nycrc
-.travis.yml
+    # Unexpected changes
+    changes:
+      default:
+        enabled: yes
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
 
-# Git-related
-/.githooks
-/.github
+# Comments inside pull requests
+comment:
+  layout: header, tree, changes, files
+  behavior: default
+  paths:
+    - src
+    - tests

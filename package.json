@@ -1,6 +1,6 @@
 {
   "name": "ginseng-node",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A connect middleware for Ginseng",
   "keywords": [
     "unit",
@@ -64,6 +64,7 @@
     "mock-fs": "^4.3.0",
     "node-mocks-http": "^1.6.1",
     "nodemon": "^1.11.0",
-    "nyc": "^10.3.2"
+    "nyc": "^10.3.2",
+    "uglify-js": "^3.0.25"
   }
 }
