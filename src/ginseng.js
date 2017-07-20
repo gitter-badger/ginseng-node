@@ -124,7 +124,9 @@ export default class Ginseng {
       /* If no scope was given, prepend a matching number of "*" */
       const scope = options.scope
         ? options.scope
-        : new Array(this.config_.scope.length).fill("*").join("/")
+        : new Array(this.config_.scope.length)
+            .fill("*")
+            .join("/")
 
       /* Load and initialize stages */
       Promise.all([index - 1, index]
