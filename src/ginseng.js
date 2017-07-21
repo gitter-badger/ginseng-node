@@ -112,9 +112,9 @@ export default class Ginseng {
   update(name, suite = "*", options = {}) {
     return new Promise((resolve, reject) => {
       if (typeof name !== "string" || !name.length)
-        return reject(new TypeError(`Invalid stage name: ${inspect(name)}`))
+        return reject(new TypeError(`Invalid stage name: ${inspect(name)}`))    // TODO: check stagename validity --> schema????
       if (suite !== "*" && (typeof suite !== "string" || !suite.length))
-        return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))
+        return reject(new TypeError(`Invalid suite name: ${inspect(suite)}`))   // TODO: check suite name validity
       if (typeof options !== "object")
         return reject(new TypeError(`Invalid options: ${inspect(options)}`))
 

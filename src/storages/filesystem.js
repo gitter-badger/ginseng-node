@@ -183,7 +183,7 @@ export default class FileSystemStorage extends AbstractStorage {
 
           /* Merge nested suites and specifications */
           .then(data =>
-            resolve(merge.all([...data, {}])))
+            resolve(merge.all([...data, {}, {}])))
 
           /* Propagate error */
           .catch(reject)

@@ -86,8 +86,7 @@ const args = yargs
       /* Stage name */
       .option("stage", {
         describe: "stage name",
-        type: "string",
-        default: "baseline"
+        type: "string"
       })
 
       /* Filter by scope */
@@ -117,6 +116,20 @@ const args = yargs
   .argv
 
 /* ----------------------------------------------------------------------------
+ * Functions
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Handle errors
+ *
+ * @param {Error} err - Error
+ */
+const errorhandler = err => {
+  process.stderr.write(`Error: ${err.message}\n`)
+  process.exit(1)
+}
+
+/* ----------------------------------------------------------------------------
  * Program
  * ------------------------------------------------------------------------- */
 
@@ -131,21 +144,38 @@ switch (args._.shift()) {
 
   /* Start server in the foreground */
   case "start":
-    http.createServer(
-      ginseng.middleware({ morgan: args.format })
-    ).listen(args.port, args.host)
-    process.stdout.write(`Server listening on ${args.host}:${args.port}\n`)
+    new Promise((resolve, reject) => {
+      const server = http.createServer(
+        ginseng.middleware({ morgan: args.format }))
+
+      /* Register event handlers */
+      server.on("error", err => reject(err))
+      server.on("listening", resolve)
+
+      /* Try to bind to host/interface and port */
+      server.listen(args.port, args.host)
+    })
+
+      /* We're good to go */
+      .then(() => {
+        process.stdout.write(`Server listening on ${args.host}:${args.port}\n`)
+      })
+
+      /* Handle errors */
+      .catch(errorhandler)
     break
 
   /* Update baseline */
   case "update":
-    (args._.length ? args._ : ["*"]).forEach(suite => {
-      ginseng.update(args.stage, suite, { scope: args.scope })
-        .catch(err => {
-          process.stderr.write(`${err.message}\n`)
-          process.exit(1)
-        })
-    })
+    (args._.length ? args._ : ["*"]).reduce((promise, suite) => {
+      const stage = args.stage ||
+        ginseng.config.stages[ginseng.config.stages.length - 1].name
+
+      /* Update stage after previous update is finished */
+      return promise.then(() =>
+        ginseng.update(stage, suite, { scope: args.scope }))
+    }, Promise.resolve())
+      .catch(errorhandler)
     break
 
   /* Unknown command, show help message */

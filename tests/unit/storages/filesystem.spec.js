@@ -205,7 +205,8 @@ describe("storages/FileSystem", () => {
           },
           "matcha": {
             "hojicha.json": "invalid"
-          }
+          },
+          "tencha": {}
         }
       })
     })
@@ -223,6 +224,11 @@ describe("storages/FileSystem", () => {
     /* Test: should resolve with nested data */
     it("should resolve with nested data",
       fetchShouldResolveWithNestedData
+    )
+
+    /* Test: should resolve with empty data */
+    it("should resolve with empty data",
+      fetchShouldResolveWithEmptyData
     )
 
     /* Test: should reject on empty suite name */
@@ -342,7 +348,8 @@ describe("storages/FileSystem", () => {
           },
           "matcha": {
             "hojicha.json": "{ \"data\": true }"
-          }
+          },
+          "tencha": {}
         }
       })
     })
@@ -653,6 +660,17 @@ function fetchShouldResolveWithNestedData(done) {
     .catch(done.fail)
 }
 
+/* Test: #fetch should resolve with empty data */
+function fetchShouldResolveWithEmptyData(done) {
+  new FileSystemStorage("fetch").fetch("tencha")
+    .then(suite => {
+      expect(suite)
+        .toEqual({})
+      done()
+    })
+    .catch(done.fail)
+}
+
 /* Test: #fetch should reject on empty suite name */
 function fetchShouldRejectOnEmptySuiteName(done) {
   new FileSystemStorage("fetch").fetch("")
@@ -956,7 +974,8 @@ function exportShouldResolveWithData(done) {
               specs: {
                 hojicha: { data: true }
               }
-            }
+            },
+            tencha: {}
           }
         })
       done()
