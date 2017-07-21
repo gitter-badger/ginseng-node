@@ -1,5 +1,7 @@
 # Ginseng.Node
 
+[![Join the chat at https://gitter.im/ginseng/ginseng-node](https://badges.gitter.im/ginseng/ginseng-node.svg)](https://gitter.im/ginseng/ginseng-node?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Travis][travis-image]][travis-link]
 [![Codecov][codecov-image]][codecov-link]
 [![Gitter][gitter-image]][gitter-link]
