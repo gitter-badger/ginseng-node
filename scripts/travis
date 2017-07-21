@@ -36,10 +36,12 @@ fi
 # Build library
 "$(npm bin)"/babel src --out-dir dist --copy-files
 
-# Pretty-print code
-for file in $(find dist -name "*.js"); do
-  "$(npm bin)"/uglifyjs $file --beautify indent_level=2 --output $file
-done
+# Pretty-print code in case we're on a release branch
+if [[ "$TRAVIS_BRANCH" =~ ^[0-9.]+$ ]]; then
+  for file in $(find dist -name "*.js"); do
+    "$(npm bin)"/uglifyjs $file --beautify indent_level=2 --output $file
+  done
+fi
 
 # Start test runner
 "$(npm bin)"/cross-env NODE_ENV=test \
